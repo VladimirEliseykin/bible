@@ -1,0 +1,185 @@
+<title>Библия в акварели</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Golos+Text:wght@400;500;600&display=swap">
+<style>
+/* Layout: витрина из четырёх телефонов в ряд (переносятся на узком экране); внутри каждого — живой прототип оглавления */
+:root{
+  --page:#e9ecef; --ink:#1d2430; --muted:#6b7482; --phone:#f4f6f8; --card:#ffffff; --line:#dde2e8; --accent:#2f5d8a; --gold:#b08a3e;
+  --display:"Cormorant Garamond", "Times New Roman", serif;
+  --ui:"Golos Text", system-ui, sans-serif;
+  color-scheme:light;
+}
+body{background:var(--page);color:var(--ink);font-family:var(--ui);padding:32px 16px 48px}
+header{max-width:1500px;margin:0 auto 28px}
+h1{font-family:var(--display);font-weight:600;font-size:2.4rem;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:68ch;line-height:1.5}
+.wall{display:flex;flex-wrap:wrap;gap:36px 28px;justify-content:center;max-width:1500px;margin:0 auto}
+.slot{display:flex;flex-direction:column;gap:12px;width:340px;max-width:100%}
+.slot h2{font-size:1rem;margin:0;font-weight:600}
+.slot h2 b{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--card);font-size:.8rem;margin-right:8px}
+.slot p{margin:0;color:var(--muted);font-size:.85rem;line-height:1.45;min-height:3.8em}
+.phone{position:relative;width:100%;aspect-ratio:9/18.5;border-radius:36px;background:var(--phone);border:8px solid #11151b;overflow:hidden;box-shadow:0 18px 40px -18px rgba(20,30,45,.45)}
+.scr{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none}
+.scr::-webkit-scrollbar{display:none}
+.bar{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;background:linear-gradient(var(--phone) 75%,transparent)}
+.bar .t{font-family:var(--display);font-size:1.6rem;font-weight:700}
+.ico{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--ink)}
+.sec{font-family:var(--display);font-size:1.35rem;font-weight:700;margin:14px 18px 8px}
+.dc{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--gold);vertical-align:middle;margin-left:4px}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0;text-align:left}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* арт-заглушки: группы книг */
+.a-law{--g:linear-gradient(170deg,#f3d9a4 0%,#d9a35f 55%,#8b5a2b 100%)}
+.a-hist{--g:linear-gradient(170deg,#cfe3c2 0%,#8fb07a 55%,#4f6b3f 100%)}
+.a-wis{--g:linear-gradient(170deg,#d8e4f2 0%,#93acd0 55%,#4a6491 100%)}
+.a-pro{--g:linear-gradient(170deg,#f6d3c8 0%,#d98f7b 55%,#8c4535 100%)}
+.a-mac{--g:linear-gradient(170deg,#e8dccb 0%,#b49b78 55%,#6a5638 100%)}
+.a-gos{--g:linear-gradient(170deg,#fbeec2 0%,#e9c46a 50%,#b07d1f 100%)}
+.a-act{--g:linear-gradient(170deg,#c9ecdf 0%,#7cc3a6 55%,#2f7a5e 100%)}
+.a-cath{--g:linear-gradient(170deg,#d6e6f5 0%,#8eb6dc 55%,#3b6b98 100%)}
+.a-paul{--g:linear-gradient(170deg,#e7dcf3 0%,#b69ad8 55%,#6a4a96 100%)}
+.a-rev{--g:linear-gradient(170deg,#2b2f4a 0%,#5a4f7c 55%,#d39b6a 100%)}
+.art{position:relative;overflow:hidden;background:radial-gradient(120% 60% at 50% 115%,rgba(255,255,255,.35),transparent 60%),radial-gradient(60% 40% at 78% 22%,rgba(255,255,255,.55),transparent 70%),var(--g)}
+.art::after{content:"";position:absolute;inset:auto 0 0 0;height:38%;background:radial-gradient(70% 100% at 25% 100%,rgba(0,0,0,.18),transparent 70%),radial-gradient(60% 90% at 85% 100%,rgba(0,0,0,.14),transparent 70%);pointer-events:none}
+
+/* V1: группы-баннеры + сетка книг */
+.v1 .ban{position:relative;margin:8px 14px 10px;height:92px;border-radius:20px;overflow:hidden;display:flex;align-items:flex-end;padding:12px 14px;color:#fff}
+.v1 .ban span{position:relative;z-index:1;font-family:var(--display);font-size:1.45rem;font-weight:700;text-shadow:0 1px 8px rgba(0,0,0,.35)}
+.v1 .ban small{position:relative;z-index:1;margin-left:auto;font-size:.72rem;opacity:.9}
+.v1 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 14px 6px}
+.v1 .grid button{background:var(--card);border-radius:14px;padding:10px 10px 9px;box-shadow:0 1px 0 var(--line)}
+.v1 .grid b{display:block;font-weight:600;font-size:.8rem;line-height:1.2}
+.v1 .grid i{font-style:normal;color:var(--muted);font-size:.68rem}
+
+/* V2: полки с обложками */
+.v2 .shelf{display:flex;gap:10px;overflow-x:auto;padding:2px 18px 12px;scrollbar-width:none}
+.v2 .cov{flex:0 0 96px;display:flex;flex-direction:column;gap:6px}
+.v2 .cov .pic{position:relative;height:128px;border-radius:14px;overflow:hidden;display:grid;place-items:center;color:#fff;font-family:var(--display);font-size:1.6rem;font-weight:700;text-shadow:0 1px 10px rgba(0,0,0,.3)}
+.v2 .cov b{font-size:.75rem;font-weight:500;line-height:1.2}
+.v2 .cov i{font-style:normal;font-size:.66rem;color:var(--muted)}
+.v2 .lbl{display:flex;justify-content:space-between;align-items:baseline;margin:10px 18px 8px}
+.v2 .lbl span{font-weight:600;font-size:.9rem}
+.v2 .lbl small{color:var(--muted);font-size:.72rem}
+.v2 .hero{position:relative;margin:4px 14px 6px;height:150px;border-radius:22px;overflow:hidden;color:#fff;padding:16px;display:flex;flex-direction:column;justify-content:flex-end}
+.v2 .hero *{position:relative;z-index:1}
+.v2 .hero small{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;opacity:.9}
+.v2 .hero b{font-family:var(--display);font-size:1.7rem}
+
+/* V3: список с артом-миниатюрой и раскрытием глав */
+.v3 .seg{display:flex;margin:4px 14px 10px;background:#e3e8ee;border-radius:14px;padding:4px}
+.v3 .seg button{flex:1;text-align:center;padding:9px;border-radius:11px;font-size:.85rem;font-weight:500;color:var(--muted)}
+.v3 .seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.v3 .grp{font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:16px 18px 6px}
+.v3 .row{display:flex;align-items:center;gap:12px;width:100%;padding:8px 18px}
+.v3 .thumb{position:relative;flex:0 0 46px;height:46px;border-radius:12px;overflow:hidden}
+.v3 .row div{flex:1;min-width:0}
+.v3 .row b{display:block;font-weight:500;font-size:.92rem}
+.v3 .row i{font-style:normal;color:var(--muted);font-size:.74rem}
+.v3 .chev{color:var(--muted);transition:transform .2s}
+.v3 .row[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.v3 .chs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;padding:2px 18px 10px 76px}
+.v3 .chs button{background:var(--card);border-radius:10px;height:34px;text-align:center;font-size:.8rem;font-variant-numeric:tabular-nums}
+
+/* V4: аббревиатуры, но с артом группы и «книжными» плитками */
+.v4 .head{position:relative;margin:4px 14px 12px;border-radius:22px;overflow:hidden;padding:16px 16px 14px;color:#fff}
+.v4 .head *{position:relative;z-index:1}
+.v4 .head b{font-family:var(--display);font-size:1.6rem;display:block}
+.v4 .head small{font-size:.72rem;opacity:.9}
+.v4 .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:0 14px 4px}
+.v4 .tiles button{position:relative;height:52px;border-radius:12px;overflow:hidden;color:#fff;text-align:center;font-family:var(--display);font-weight:700;font-size:1.05rem;text-shadow:0 1px 6px rgba(0,0,0,.35)}
+.v4 .tiles button span{position:relative;z-index:1}
+.v4 .cap{font-size:.68rem;color:var(--muted);margin:10px 18px 6px;letter-spacing:.08em;text-transform:uppercase}
+
+/* нижний лист выбора главы (общий) */
+.sheet{position:absolute;inset:auto 0 0 0;z-index:5;background:var(--card);border-radius:24px 24px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.18);transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);max-height:72%;display:flex;flex-direction:column}
+.sheet.open{transform:none}
+.sheet .sh{position:relative;height:110px;flex:0 0 auto;border-radius:24px 24px 0 0;overflow:hidden;color:#fff;display:flex;align-items:flex-end;padding:14px 16px}
+.sheet .sh *{position:relative;z-index:1}
+.sheet .sh b{font-family:var(--display);font-size:1.8rem;line-height:1}
+.sheet .sh small{display:block;font-size:.72rem;opacity:.9;margin-top:4px}
+.sheet .x{position:absolute;top:10px;right:10px;z-index:2;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.25);color:#fff;text-align:center}
+.sheet .cg{overflow-y:auto;display:grid;grid-template-columns:repeat(6,1fr);gap:7px;padding:14px 16px 20px}
+.sheet .cg button{background:#eef1f5;border-radius:11px;height:40px;text-align:center;font-variant-numeric:tabular-nums;font-size:.88rem}
+.scrim{position:absolute;inset:0;z-index:4;background:rgba(10,15,25,.25);opacity:0;pointer-events:none;transition:opacity .25s}
+.scrim.open{opacity:1;pointer-events:auto}
+.toast{position:absolute;left:50%;bottom:22px;z-index:6;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:.78rem;padding:8px 14px;border-radius:20px;opacity:0;transition:opacity .2s;white-space:nowrap}
+.toast.on{opacity:1}
+.a-law{--g:url(art/law.jpg) center/cover}.a-hist{--g:url(art/hist.jpg) center/cover}.a-wis{--g:url(art/wis.jpg) center/cover}.a-pro{--g:url(art/pro.jpg) center/cover}.a-mac{--g:url(art/mac.jpg) center/cover}.a-gos{--g:url(art/gos.jpg) center/cover}.a-act{--g:url(art/act.jpg) center/cover}.a-cath{--g:url(art/cath.jpg) center/cover}.a-paul{--g:url(art/paul.jpg) center/cover}.a-rev{--g:url(art/rev.jpg) center/cover}
+.art{background:var(--g)}
+.art::after{background:linear-gradient(transparent 40%,rgba(0,0,0,.35))}
+.home .hh{position:relative;height:56%;overflow:hidden;border-radius:0 0 28px 28px;touch-action:pan-y;cursor:grab}
+.home .hh .art{position:absolute;inset:0;transition:opacity .7s}
+.home .ttl{position:absolute;top:14px;left:18px;z-index:2;color:#fff;font-family:var(--display);font-size:1.6rem;font-weight:700;text-shadow:0 1px 8px rgba(0,0,0,.4)}
+.home .dots{position:absolute;bottom:14px;left:0;right:0;z-index:2;display:flex;justify-content:center;gap:6px}
+.home .dots i{width:7px;height:7px;border-radius:4px;background:rgba(255,255,255,.6);transition:width .3s}
+.home .dots i.on{width:20px;background:#fff}
+.home .cont{display:flex;gap:12px;align-items:center;margin:0 14px;background:var(--card);border-radius:18px;padding:10px}
+.home .cont .art{flex:0 0 72px;height:72px;border-radius:12px}
+.home .cont b{display:block;font-size:.95rem}
+.home .cont i{font-style:normal;color:var(--muted);font-size:.78rem}
+footer{max-width:900px;margin:36px auto 0;color:var(--muted);font-size:.85rem;line-height:1.5;text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header>
+  <h1>Как смотрятся акварели</h1>
+  <p>Временные образцы — картинки, которые ты сохранил: светлая тёплая акварель, много неба и света. Подставлены по группам книг, пока ты генерируешь свои.</p>
+</header>
+
+<div class="wall">
+  <section class="slot"><h2><b>1</b>Главная</h2><p>Карусель артов (листается сама, можно свайпать), ниже «Продолжить чтение».</p><div class="phone home" id="ph"></div></section>
+  <section class="slot"><h2><b>2</b>Полки с обложками</h2><p>Как библиотека: у каждой книги обложка-арт, группы листаются вбок. Самый «красивый», но книги не видны все сразу.</p><div class="phone v2" id="p2"></div></section>
+</div>
+<footer>Изображения — твои примеры из Pinterest, только для внутреннего предпросмотра.</footer>
+
+<script>
+const G={law:["Пятикнижие","a-law"],hist:["Исторические книги","a-hist"],wis:["Учительные книги","a-wis"],pro:["Пророческие книги","a-pro"],mac:["Исторические (продолжение)","a-mac"],gos:["Евангелия","a-gos"],act:["Деяния","a-act"],cath:["Соборные послания","a-cath"],paul:["Послания Павла","a-paul"],rev:["Откровение","a-rev"]};
+// [название, сокращение, глав, группа, неканоническая]
+const OT=[["Бытие","Быт",50,"law"],["Исход","Исх",40,"law"],["Левит","Лев",27,"law"],["Числа","Чис",36,"law"],["Второзаконие","Втор",34,"law"],
+["Иисус Навин","Нав",24,"hist"],["Судьи","Суд",21,"hist"],["Руфь","Руф",4,"hist"],["1 Царств","1Цар",31,"hist"],["2 Царств","2Цар",24,"hist"],["3 Царств","3Цар",22,"hist"],["4 Царств","4Цар",25,"hist"],["1 Паралипоменон","1Пар",29,"hist"],["2 Паралипоменон","2Пар",36,"hist"],["1 Ездры","1Езд",10,"hist"],["Неемия","Неем",13,"hist"],["2 Ездры","2Езд",9,"hist",1],["Товит","Тов",14,"hist",1],["Иудифь","Иудф",16,"hist",1],["Есфирь","Есф",10,"hist"],
+["Иов","Иов",42,"wis"],["Псалтирь","Пс",151,"wis"],["Притчи","Притч",31,"wis"],["Екклесиаст","Еккл",12,"wis"],["Песнь песней","Песн",8,"wis"],["Премудрость Соломона","Прем",19,"wis",1],["Сирах","Сир",51,"wis",1],
+["Исаия","Ис",66,"pro"],["Иеремия","Иер",52,"pro"],["Плач Иеремии","Плач",5,"pro"],["Послание Иеремии","ПосИер",1,"pro",1],["Варух","Вар",5,"pro",1],["Иезекииль","Иез",48,"pro"],["Даниил","Дан",14,"pro"],["Осия","Ос",14,"pro"],["Иоиль","Иоил",3,"pro"],["Амос","Ам",9,"pro"],["Авдий","Авд",1,"pro"],["Иона","Ион",4,"pro"],["Михей","Мих",7,"pro"],["Наум","Наум",3,"pro"],["Аввакум","Авв",3,"pro"],["Софония","Соф",3,"pro"],["Аггей","Агг",2,"pro"],["Захария","Зах",14,"pro"],["Малахия","Мал",4,"pro"],
+["1 Маккавейская","1Мак",16,"mac",1],["2 Маккавейская","2Мак",15,"mac",1],["3 Маккавейская","3Мак",7,"mac",1],["3 Ездры","3Езд",16,"mac",1]];
+const NT=[["От Матфея","Мф",28,"gos"],["От Марка","Мк",16,"gos"],["От Луки","Лк",24,"gos"],["От Иоанна","Ин",21,"gos"],["Деяния апостолов","Деян",28,"act"],
+["Иакова","Иак",5,"cath"],["1 Петра","1Пет",5,"cath"],["2 Петра","2Пет",3,"cath"],["1 Иоанна","1Ин",5,"cath"],["2 Иоанна","2Ин",1,"cath"],["3 Иоанна","3Ин",1,"cath"],["Иуды","Иуд",1,"cath"],
+["Римлянам","Рим",16,"paul"],["1 Коринфянам","1Кор",16,"paul"],["2 Коринфянам","2Кор",13,"paul"],["Галатам","Гал",6,"paul"],["Ефесянам","Еф",6,"paul"],["Филиппийцам","Флп",4,"paul"],["Колоссянам","Кол",4,"paul"],["1 Фессалоникийцам","1Фес",5,"paul"],["2 Фессалоникийцам","2Фес",3,"paul"],["1 Тимофею","1Тим",6,"paul"],["2 Тимофею","2Тим",4,"paul"],["Титу","Тит",3,"paul"],["Филимону","Флм",1,"paul"],["Евреям","Евр",13,"paul"],
+["Откровение","Откр",22,"rev"]];
+const plural=n=>{const a=n%10,b=n%100;return n+" "+(a===1&&b!==11?"глава":a>=2&&a<=4&&(b<10||b>=20)?"главы":"глав")};
+const groups=list=>{const out=[];list.forEach((b,i)=>{const last=out[out.length-1];if(!last||last.g!==b[3])out.push({g:b[3],books:[]});out[out.length-1].books.push([...b,i])});return out};
+const dot=b=>b[4]?'<span class="dc" title="неканоническая"></span>':'';
+const all=[...OT,...NT];
+const search='<span class="ico" aria-hidden="true"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="9" r="6"/><path d="m14 14 4 4"/></svg></span>';
+const shell=(inner)=>`<div class="scr"><div style="height:22px"></div>${inner}<div style="height:40px"></div></div><div class="scrim"></div><div class="sheet" role="dialog"></div><div class="toast"></div>`;
+
+function v1(){let h='';[["Ветхий Завет",OT],["Новый Завет",NT]].forEach(([t,l])=>{h+=`<div class="sec">${t}</div>`;groups(l).forEach(g=>{h+=`<div class="ban art ${G[g.g][1]}"><span>${G[g.g][0]}</span><small>${g.books.length} кн.</small></div><div class="grid">`+g.books.map(b=>`<button data-b="${b[0]}">  <b>${b[0]}${dot(b)}</b><i>${plural(b[2])}</i></button>`).join('')+'</div>'})});return h}
+function v2(){let h=`<div class="hero art a-gos"><small>Продолжить</small><b>От Иоанна, 3</b></div>`;[["Ветхий Завет",OT],["Новый Завет",NT]].forEach(([t,l])=>{h+=`<div class="sec">${t}</div>`;groups(l).forEach(g=>{h+=`<div class="lbl"><span>${G[g.g][0]}</span><small>${g.books.length} кн.</small></div><div class="shelf">`+g.books.map(b=>`<button class="cov" data-b="${b[0]}"><span class="pic art ${G[b[3]][1]}"><span style="position:relative;z-index:1">${b[1]}</span></span><b>${b[0]}${dot(b)}</b><i>${plural(b[2])}</i></button>`).join('')+'</div>'})});return h}
+function v3list(l){let h='';groups(l).forEach(g=>{h+=`<div class="grp">${G[g.g][0]}</div>`+g.books.map(b=>`<button class="row" aria-expanded="false" data-x="${b[0]}"><span class="thumb art ${G[b[3]][1]}"></span><div><b>${b[0]}${dot(b)}</b><i>${plural(b[2])}</i></div><svg class="chev" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 3 5 5-5 5"/></svg></button>`).join('')});return h}
+function v3(){return `<div class="seg"><button aria-pressed="true" data-t="ot">Ветхий Завет</button><button aria-pressed="false" data-t="nt">Новый Завет</button></div><div class="lst">${v3list(OT)}</div>`}
+function v4(){let h='';[["Ветхий Завет",OT,"a-law","50 книг"],["Новый Завет",NT,"a-gos","27 книг"]].forEach(([t,l,a,c])=>{h+=`<div class="head art ${a}"><b>${t}</b><small>${c}</small></div>`;groups(l).forEach(g=>{h+=`<div class="cap">${G[g.g][0]}</div><div class="tiles">`+g.books.map(b=>`<button class="art ${G[b[3]][1]}" data-b="${b[0]}" title="${b[0]}"><span>${b[1]}</span></button>`).join('')+'</div>'})});return h}
+
+function wire(el,content){
+  el.innerHTML=shell(content);
+  const sheet=el.querySelector('.sheet'),scrim=el.querySelector('.scrim'),toast=el.querySelector('.toast');
+  const close=()=>{sheet.classList.remove('open');scrim.classList.remove('open')};
+  const go=(name,ch)=>{close();toast.textContent=`Открыть: ${name}, глава ${ch}`;toast.classList.add('on');setTimeout(()=>toast.classList.remove('on'),1400)};
+  const open=name=>{const b=all.find(x=>x[0]===name);
+    sheet.innerHTML=`<div class="sh art ${G[b[3]][1]}"><div><b>${b[0]}</b><small>${G[b[3]][0]} · ${plural(b[2])}</small></div></div><button class="x" aria-label="Закрыть">✕</button><div class="cg">${Array.from({length:b[2]},(_,i)=>`<button>${i+1}</button>`).join('')}</div>`;
+    if(b[2]===1){go(b[0],1);return}
+    sheet.classList.add('open');scrim.classList.add('open');
+    sheet.querySelector('.x').onclick=close;
+    sheet.querySelectorAll('.cg button').forEach(x=>x.onclick=()=>go(b[0],x.textContent))};
+  scrim.onclick=close;
+  el.addEventListener('click',e=>{const t=e.target.closest('[data-b]');if(t)open(t.dataset.b)});
+  return {go};
+}
+wire(document.getElementById('p2'),v2());
+const slides=["act","law","wis","cath","pro"];
+document.getElementById('ph').innerHTML=`<div class="scr"><div class="hh">${slides.map((k,i)=>`<div class="art a-${k}" style="opacity:${i?0:1}"></div>`).join('')}<div class="dots">${slides.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div></div><div class="sec">Продолжить чтение</div><div class="cont"><span class="art a-wis"></span><div><b>Псалтирь 22</b><i>Вернитесь к последнему открытому стиху</i></div></div></div>`;
+let cur=0;const L=document.querySelectorAll('#ph .hh .art'),D=document.querySelectorAll('#ph .dots i');
+const show=n=>{L[cur].style.opacity=0;D[cur].classList.remove('on');cur=(n+L.length)%L.length;L[cur].style.opacity=1;D[cur].classList.add('on')};
+let tm=setInterval(()=>show(cur+1),3500);
+let x0=null;const hh=document.querySelector('#ph .hh');
+hh.addEventListener('pointerdown',e=>x0=e.clientX);
+hh.addEventListener('pointerup',e=>{if(x0===null)return;const dx=e.clientX-x0;x0=null;clearInterval(tm);show(cur+(dx<0?1:-1));tm=setInterval(()=>show(cur+1),3500)});
+</script>
