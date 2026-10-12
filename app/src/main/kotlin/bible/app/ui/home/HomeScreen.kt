@@ -57,7 +57,7 @@ fun HomeScreen(db: BibleDatabase, store: ReadingStore, onContinue: () -> Unit) {
     val book = position?.let { nav.book(it.ref.bookId) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val carouselHeight = LocalConfiguration.current.screenHeightDp.dp * 0.55f
+    val carouselHeight = LocalConfiguration.current.screenHeightDp.dp / 3
     StatusBarIcons(dark = false)
 
     Column(Modifier.fillMaxSize().background(BibleColors.Page).verticalScroll(rememberScrollState())) {
