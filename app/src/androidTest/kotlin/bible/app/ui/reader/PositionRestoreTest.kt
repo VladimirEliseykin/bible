@@ -2,7 +2,9 @@ package bible.app.ui.reader
 
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.StateRestorationTester
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.lifecycle.Lifecycle
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performTouchInput
@@ -20,7 +22,8 @@ import org.junit.Rule
 import org.junit.Test
 
 class PositionRestoreTest {
-    @get:Rule val rule = createComposeRule()
+    @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
+    private val createAndroidComposeRuleForStop get() = rule
     private val container = (InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as BibleApp).container
     private val db = runBlocking { container.database() }
 
@@ -49,5 +52,18 @@ class PositionRestoreTest {
         rule.waitForIdle()
         Thread.sleep(800)
         assertEquals(ReadingPosition(ChapterRef(51, 5), 40), saved())
+    }
+
+    @Test fun goingToBackgroundRightAfterScrollSavesVerse() {
+        val activityRule = createAndroidComposeRuleForStop
+        runBlocking { container.store.savePosition(ReadingPosition(ChapterRef(22, 118), 1)) }
+        activityRule.setContent { BibleTheme { ReaderScreen(db, container.store) {} } }
+        activityRule.waitUntil(5_000) { activityRule.onAllNodes(hasTestTag("verse-1")).fetchSemanticsNodes().isNotEmpty() }
+        activityRule.mainClock.autoAdvance = false
+        activityRule.onNodeWithTag("chapter-list-22-118").performScrollToIndex(77)
+        activityRule.mainClock.advanceTimeBy(50)
+        activityRule.activityRule.scenario.moveToState(Lifecycle.State.CREATED)
+        activityRule.mainClock.autoAdvance = true
+        activityRule.waitUntil(5_000) { saved() == ReadingPosition(ChapterRef(22, 118), 77) }
     }
 }

@@ -7,7 +7,6 @@ import bible.app.data.ChapterRef
 import bible.app.data.FIRST_GOSPEL_CHAPTER
 import bible.app.data.ReadingPosition
 import bible.app.data.ReadingStore
-import bible.app.data.Verse
 import bible.app.domain.ChapterNavigator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,13 +30,11 @@ class ReaderViewModel(private val db: BibleDatabase, private val store: ReadingS
         }
     }
 
-    private val cache = object : LinkedHashMap<ChapterRef, MutableStateFlow<List<Verse>>>(8, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<ChapterRef, MutableStateFlow<List<Verse>>>) = size > 5
-    }
+    private val chapters = ChapterCache(viewModelScope) { db.chapter(it) }
 
-    fun chapter(ref: ChapterRef): StateFlow<List<Verse>> = cache.getOrPut(ref) {
-        MutableStateFlow<List<Verse>>(emptyList()).also { flow -> viewModelScope.launch { flow.value = db.chapter(ref) } }
-    }
+    fun chapter(ref: ChapterRef): StateFlow<ChapterContent> = chapters.chapter(ref)
+
+    fun retry(ref: ChapterRef) = chapters.retry(ref)
 
     fun onPositionSettled(ref: ChapterRef, firstVisibleVerse: Int) {
         viewModelScope.launch { store.savePosition(ReadingPosition(ref, firstVisibleVerse)) }

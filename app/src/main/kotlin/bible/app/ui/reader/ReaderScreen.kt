@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -86,17 +87,21 @@ private fun Reader(vm: ReaderViewModel, db: BibleDatabase, begin: ReadingPositio
         snapshotFlow { pager.settledPage }.collect { chromeVisible = true }
     }
     val current = nav.refAt(pager.currentPage)
-    val currentBook = db.books.first { it.id == current.bookId }
+    val currentBook = nav.book(current.bookId)
 
     Box(Modifier.fillMaxSize().background(BibleColors.Background).nestedScroll(hideOnScroll)) {
         HorizontalPager(pager, Modifier.fillMaxSize().testTag("pager"), beyondViewportPageCount = 1, key = { it }) { page ->
             val ref = nav.refAt(page)
-            val book = db.books.first { it.id == ref.bookId }
-            val verses by vm.chapter(ref).collectAsState()
+            val book = nav.book(ref.bookId)
+            val content by remember(ref) { vm.chapter(ref) }.collectAsState()
+            if (content == ChapterContent.Failed) {
+                ChapterFailed { vm.retry(ref) }
+                return@HorizontalPager
+            }
             ChapterPage(
                 book = book,
                 chapter = ref.chapter,
-                verses = verses,
+                verses = (content as? ChapterContent.Loaded)?.verses.orEmpty(),
                 initialVerse = if (ref == begin.ref) begin.verse else 1,
                 textSizeSp = TEXT_SIZES_SP[textSize],
                 lineHeight = LINE_HEIGHTS[spacing],
@@ -194,4 +199,22 @@ private fun NavArrow(symbol: String, tag: String, enabled: Boolean, onClick: () 
             .padding(horizontal = 8.dp).testTag(tag),
         contentAlignment = Alignment.Center,
     ) { Text(symbol, Modifier.testTag("$tag-glyph"), fontSize = 22.sp, color = if (enabled) BibleColors.Ink else BibleColors.Line) }
+}
+
+@Composable
+private fun ChapterFailed(onRetry: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().padding(32.dp).testTag("chapter-failed"),
+        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text("Не удалось открыть главу.", fontSize = 16.sp, color = BibleColors.Ink, textAlign = TextAlign.Center)
+        Text(
+            "Повторить",
+            Modifier.clip(RoundedCornerShape(20.dp)).background(BibleColors.Tab).clickable(onClick = onRetry)
+                .padding(horizontal = 20.dp, vertical = 10.dp),
+            fontWeight = FontWeight.SemiBold,
+            color = BibleColors.Ink,
+        )
+    }
 }

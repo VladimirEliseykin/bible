@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -40,14 +41,18 @@ import bible.app.ui.art.artFor
 import bible.app.ui.art.homeCarouselArts
 import bible.app.ui.theme.BibleColors
 import bible.app.ui.theme.Literata
+import java.util.Optional
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(db: BibleDatabase, store: ReadingStore, onContinue: () -> Unit) {
     val nav = remember(db) { ChapterNavigator(db.books) }
-    val saved by store.position.collectAsState(initial = null)
-    val position = saved?.let(nav::sanitize)
-    val book = position?.let { p -> db.books.first { it.id == p.ref.bookId } }
+    // Optional.empty = позиции нет; null = DataStore ещё не ответил, кнопку не трогаем, чтобы не затереть позицию.
+    val saved by remember(store) { store.position.map { Optional.ofNullable(it) } }.collectAsState(initial = null)
+    val loaded = saved != null
+    val position = saved?.orElse(null)?.let(nav::sanitize)
+    val book = position?.let { nav.book(it.ref.bookId) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val carouselHeight = LocalConfiguration.current.screenHeightDp.dp * 0.55f
@@ -65,10 +70,11 @@ fun HomeScreen(db: BibleDatabase, store: ReadingStore, onContinue: () -> Unit) {
         Row(
             Modifier
                 .padding(horizontal = 14.dp)
+                .alpha(if (loaded) 1f else 0f)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
                 .background(BibleColors.Background)
-                .clickable {
+                .clickable(enabled = loaded) {
                     if (position == null) {
                         scope.launch {
                             store.savePosition(ReadingPosition(FIRST_GOSPEL_CHAPTER, 1))
@@ -82,7 +88,7 @@ fun HomeScreen(db: BibleDatabase, store: ReadingStore, onContinue: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            val artBook = book ?: db.books.first { it.id == FIRST_GOSPEL_CHAPTER.bookId }
+            val artBook = book ?: nav.book(FIRST_GOSPEL_CHAPTER.bookId)
             Image(
                 painterResource(artFor(context, artBook)),
                 null,
