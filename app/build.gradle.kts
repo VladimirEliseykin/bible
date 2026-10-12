@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
+evaluationDependsOn(":tools:dbgen")
 android {
     namespace = "bible.app"
     compileSdk = 36
@@ -51,3 +52,17 @@ dependencies {
     androidTestImplementation(libs.androidx.test.ext)
     androidTestImplementation(libs.coroutines.test)
 }
+
+val bibleDbDir = layout.buildDirectory.dir("generated/bibleDb")
+val generateBibleDb by tasks.registering(JavaExec::class) {
+    val dbgen = project(":tools:dbgen")
+    classpath = dbgen.extensions.getByType<SourceSetContainer>()["main"].runtimeClasspath
+    mainClass.set("bible.dbgen.MainKt")
+    val src = rootProject.layout.projectDirectory.dir("tools/dbgen/source/rst78")
+    inputs.dir(src)
+    inputs.files(classpath)
+    outputs.dir(bibleDbDir)
+    args(src.asFile.path, bibleDbDir.get().file("bible.db").asFile.path)
+}
+android.sourceSets["main"].assets.srcDir(bibleDbDir)
+tasks.named("preBuild") { dependsOn(generateBibleDb) }

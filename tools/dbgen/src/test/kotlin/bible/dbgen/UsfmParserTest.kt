@@ -46,4 +46,9 @@ class UsfmParserTest {
     @Test fun collapsesWhitespace() {
         assertEquals("а б", UsfmParser.parse("\\c 1\n\\v 1   а \t  б  ").single().text)
     }
+
+    @Test fun removesNestedMarkersInsideWordsOfJesus() {
+        val usfm = "\\c 5\n\\v 12 \\wj так гнали \\+add и\\+add* пророков\\wj*"
+        assertEquals("так гнали и пророков", UsfmParser.parse(usfm).single().text)
+    }
 }

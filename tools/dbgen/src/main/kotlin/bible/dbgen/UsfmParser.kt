@@ -5,7 +5,7 @@ data class ParsedVerse(val chapter: Int, val verse: Int, val text: String)
 object UsfmParser {
     private val footnote = Regex("""\\f\s.*?\\f\*""")
     private val altVerse = Regex("""\\va\s.*?\\va\*""")
-    private val inlineMarker = Regex("""\\(add|wj|em)\*?""")
+    private val inlineMarker = Regex("""\\\+?(add|wj|em)\*?""")
     private val paragraphMarker = Regex("""^\\(p|m)\b""")
     private val chapterLine = Regex("""^\\c\s+(\d+)""")
     private val verseStart = Regex("""\\v\s+(\d+)\s*""")
