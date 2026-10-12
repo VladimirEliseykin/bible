@@ -43,7 +43,7 @@ class HomeScreenTest {
         var opened = false
         rule.setContent { BibleTheme { HomeScreen(db, container.store) { opened = true } } }
         rule.onNodeWithText("Начать с Евангелия от Матфея").performClick()
-        rule.waitForIdle()
+        rule.waitUntil(5_000) { opened }
         assertEquals(FIRST_GOSPEL_CHAPTER, runBlocking { container.store.position.first()!!.ref })
         assertTrue(opened)
     }
