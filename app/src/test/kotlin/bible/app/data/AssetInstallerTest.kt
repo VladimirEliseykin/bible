@@ -74,4 +74,15 @@ class AssetInstallerTest {
         }
         assertFalse(target.exists())
     }
+
+    @Test fun installFailureKnowsWhenDiskIsFull() {
+        val full = object : InputStream() { override fun read(): Int = throw IOException("write failed: ENOSPC (No space left on device)") }
+        val e = assertThrows(InstallFailed::class.java) { AssetInstaller({ full }, target, "1").install() }
+        assertEquals(true, e.noSpace)
+    }
+
+    @Test fun otherInstallFailureIsNotNoSpace() {
+        val e = assertThrows(InstallFailed::class.java) { AssetInstaller({ throw IOException("asset missing") }, target, "1").install() }
+        assertEquals(false, e.noSpace)
+    }
 }

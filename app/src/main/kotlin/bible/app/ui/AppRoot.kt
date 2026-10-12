@@ -42,7 +42,7 @@ import bible.app.ui.theme.BibleColors
 sealed interface LoadState {
     data object Loading : LoadState
     data class Ready(val db: BibleDatabase) : LoadState
-    data object NoSpace : LoadState
+    data class Failed(val noSpace: Boolean) : LoadState
 }
 
 object Routes {
@@ -59,12 +59,12 @@ fun AppRoot(container: AppContainer) {
         state = try {
             LoadState.Ready(container.database())
         } catch (e: InstallFailed) {
-            LoadState.NoSpace
+            LoadState.Failed(e.noSpace)
         }
     }
     when (val s = state) {
         LoadState.Loading -> Box(Modifier.fillMaxSize())
-        LoadState.NoSpace -> NoSpaceScreen {
+        is LoadState.Failed -> InstallErrorScreen(s.noSpace) {
             state = LoadState.Loading
             attempt++
         }
@@ -73,14 +73,18 @@ fun AppRoot(container: AppContainer) {
 }
 
 @Composable
-private fun NoSpaceScreen(onRetry: () -> Unit) {
+private fun InstallErrorScreen(noSpace: Boolean, onRetry: () -> Unit) {
     Column(
         Modifier.fillMaxSize().padding(32.dp).testTag("screen-no-space"),
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            "Недостаточно памяти для установки текста Библии: нужно ~15 МБ. Освободите место и повторите.",
+            if (noSpace) {
+                "Недостаточно памяти для установки текста Библии: нужно около 20 МБ. Освободите место и повторите."
+            } else {
+                "Не удалось подготовить текст Библии. Попробуйте ещё раз; если не поможет — переустановите приложение."
+            },
             textAlign = TextAlign.Center,
         )
         Button(onClick = onRetry) { Text("Повторить") }
