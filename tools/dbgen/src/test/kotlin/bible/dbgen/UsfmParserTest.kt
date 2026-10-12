@@ -51,4 +51,16 @@ class UsfmParserTest {
         val usfm = "\\c 5\n\\v 12 \\wj так гнали \\+add и\\+add* пророков\\wj*"
         assertEquals("так гнали и пророков", UsfmParser.parse(usfm).single().text)
     }
+
+    @Test fun headingsAndBlankLinesAreNotVerseText() {
+        val usfm = "\\c 1\n\\s Заголовок раздела\n\\b\n\\q1 \\v 1 Первая строка\n\\q2 вторая строка\n\\li \\v 2 Пункт."
+        assertEquals(
+            listOf(ParsedVerse(1, 1, "Первая строка вторая строка"), ParsedVerse(1, 2, "Пункт.")),
+            UsfmParser.parse(usfm),
+        )
+    }
+
+    @Test fun verseBridgeKeepsFirstNumberAndDropsRange() {
+        assertEquals(listOf(ParsedVerse(1, 1, "Текст.")), UsfmParser.parse("\\c 1\n\\v 1-2 Текст."))
+    }
 }

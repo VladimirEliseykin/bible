@@ -35,7 +35,7 @@ class HomeScreenTest {
     @Test fun invalidSavedPositionIsSanitized() {
         runBlocking { container.store.savePosition(ReadingPosition(ChapterRef(99, 9), 9)) }
         rule.setContent { BibleTheme { HomeScreen(db, container.store) {} } }
-        rule.onNodeWithText("Бытие 1").assertExists()
+        rule.onNodeWithText("От Матфея 1").assertExists()
     }
 
     @Test fun startButtonSavesMatthew1() {
