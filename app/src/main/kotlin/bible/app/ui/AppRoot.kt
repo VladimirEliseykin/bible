@@ -1,0 +1,131 @@
+package bible.app.ui
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import bible.app.AppContainer
+import bible.app.R
+import bible.app.data.BibleDatabase
+import bible.app.data.InstallFailed
+import bible.app.ui.theme.BibleColors
+
+sealed interface LoadState {
+    data object Loading : LoadState
+    data class Ready(val db: BibleDatabase) : LoadState
+    data object NoSpace : LoadState
+}
+
+object Routes {
+    const val HOME = "home"
+    const val BIBLE = "bible"
+    const val TOC = "toc"
+}
+
+@Composable
+fun AppRoot(container: AppContainer) {
+    var attempt by remember { mutableIntStateOf(0) }
+    var state by remember { mutableStateOf<LoadState>(LoadState.Loading) }
+    LaunchedEffect(attempt) {
+        state = try {
+            LoadState.Ready(container.database())
+        } catch (e: InstallFailed) {
+            LoadState.NoSpace
+        }
+    }
+    when (val s = state) {
+        LoadState.Loading -> Box(Modifier.fillMaxSize())
+        LoadState.NoSpace -> NoSpaceScreen {
+            state = LoadState.Loading
+            attempt++
+        }
+        is LoadState.Ready -> Tabs(container, s.db)
+    }
+}
+
+@Composable
+private fun NoSpaceScreen(onRetry: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().padding(32.dp).testTag("screen-no-space"),
+        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            "Недостаточно памяти для установки текста Библии: нужно ~15 МБ. Освободите место и повторите.",
+            textAlign = TextAlign.Center,
+        )
+        Button(onClick = onRetry) { Text("Повторить") }
+    }
+}
+
+private fun NavHostController.openTab(route: String) = navigate(route) {
+    popUpTo(Routes.HOME)
+    launchSingleTop = true
+}
+
+@Composable
+private fun Tabs(container: AppContainer, db: BibleDatabase) {
+    val nav = rememberNavController()
+    val entry by nav.currentBackStackEntryAsState()
+    val route = entry?.destination?.route
+    Scaffold(
+        containerColor = BibleColors.Background,
+        bottomBar = {
+            NavigationBar(containerColor = BibleColors.Background) {
+                val colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = BibleColors.Tab,
+                    selectedIconColor = BibleColors.Ink,
+                    selectedTextColor = BibleColors.Ink,
+                    unselectedIconColor = BibleColors.Muted,
+                    unselectedTextColor = BibleColors.Muted,
+                )
+                NavigationBarItem(
+                    selected = route == Routes.HOME,
+                    onClick = { nav.openTab(Routes.HOME) },
+                    icon = { Icon(painterResource(R.drawable.ic_home), null) },
+                    label = { Text("Главная") },
+                    colors = colors,
+                )
+                NavigationBarItem(
+                    selected = route == Routes.BIBLE || route == Routes.TOC,
+                    onClick = { nav.openTab(Routes.BIBLE) },
+                    icon = { Icon(painterResource(R.drawable.ic_book), null) },
+                    label = { Text("Библия") },
+                    colors = colors,
+                )
+            }
+        },
+    ) { padding ->
+        NavHost(nav, startDestination = Routes.HOME, modifier = Modifier.padding(bottom = padding.calculateBottomPadding())) {
+            composable(Routes.HOME) { Box(Modifier.fillMaxSize().testTag("screen-home")) { Text("home") } }
+            composable(Routes.BIBLE) { Box(Modifier.fillMaxSize().testTag("screen-reader")) { Text("reader") } }
+            composable(Routes.TOC) { Box(Modifier.fillMaxSize().testTag("screen-toc")) { Text("toc") } }
+        }
+    }
+}
