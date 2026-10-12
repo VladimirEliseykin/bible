@@ -104,7 +104,7 @@ fun ChapterPage(
                             0f to Color.Black.copy(alpha = 0.15f),
                             0.35f to Color.Transparent,
                             0.45f to Color.Transparent,
-                            1f to BibleColors.Background.copy(alpha = 0.97f),
+                            1f to BibleColors.Background,
                         ),
                     ),
                 )
