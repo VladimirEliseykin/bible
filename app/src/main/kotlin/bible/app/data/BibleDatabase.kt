@@ -5,8 +5,6 @@ import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-const val DB_VERSION = 1
-
 class BibleDatabase(file: File) {
     private val db: SQLiteDatabase = SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY)
 
@@ -31,6 +29,8 @@ class BibleDatabase(file: File) {
             }
         }
     }
+
+    fun close() = db.close()
 
     suspend fun chapter(ref: ChapterRef): List<Verse> = withContext(Dispatchers.IO) {
         db.rawQuery(
