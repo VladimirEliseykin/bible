@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import bible.app.data.TEXT_SIZES_SP
 import bible.app.ui.theme.BibleColors
 import bible.app.ui.theme.Literata
 

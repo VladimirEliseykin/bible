@@ -67,6 +67,7 @@ fun ChapterPage(
     listState: LazyListState,
     isCurrent: () -> Boolean,
     onArtVisibleChanged: (Boolean) -> Unit,
+    onAtEndChanged: (Boolean) -> Unit,
     onSettled: (Int) -> Unit,
 ) {
     val context = LocalContext.current
@@ -90,12 +91,20 @@ fun ChapterPage(
             .distinctUntilChanged()
             .collect { onArtVisibleChanged(it) }
     }
+    LaunchedEffect(listState, verses.isNotEmpty()) {
+        if (verses.isEmpty()) return@LaunchedEffect
+        snapshotFlow { isCurrent() to !listState.canScrollForward }
+            .filter { it.first }
+            .map { it.second }
+            .distinctUntilChanged()
+            .collect { onAtEndChanged(it) }
+    }
     LazyColumn(
         Modifier.fillMaxSize().background(BibleColors.Background).testTag("chapter-list-${book.id}-$chapter"),
         state = listState,
         contentPadding = PaddingValues(bottom = 140.dp),
     ) {
-        item(key = "header") {
+        item(key = "header", contentType = "header") {
             Box(Modifier.fillMaxWidth().height(210.dp)) {
                 Image(painterResource(artFor(context, book)), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 Box(
@@ -120,7 +129,7 @@ fun ChapterPage(
                 }
             }
         }
-        items(verses, key = { it.id }) { v ->
+        items(verses, key = { it.id }, contentType = { "verse" }) { v ->
             Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 22.dp).testTag("verse-${v.number}")) {
                 Text(
                     "${v.number}",

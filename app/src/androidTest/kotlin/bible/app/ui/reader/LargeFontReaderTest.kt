@@ -25,13 +25,13 @@ class LargeFontReaderTest {
     @get:Rule val rule = createComposeRule()
     private val container = (InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as BibleApp).container
 
-    @After fun restore() = runBlocking { container.store.setTextSize(2) }
+    @After fun restore() = runBlocking { container.store.setTextSizeSp(19f) }
 
     @Test fun longestChapterAtDoubleFontScrollsToEnd() {
         val db = runBlocking { container.database() }
         runBlocking {
             container.store.savePosition(ReadingPosition(ChapterRef(22, 118), 1))
-            container.store.setTextSize(4)
+            container.store.setTextSizeSp(27f)
         }
         rule.setContent {
             val d = LocalDensity.current

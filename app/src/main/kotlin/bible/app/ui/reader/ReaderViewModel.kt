@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import bible.app.data.BibleDatabase
 import bible.app.data.ChapterRef
+import bible.app.data.DEFAULT_TEXT_SIZE_SP
 import bible.app.data.FIRST_GOSPEL_CHAPTER
 import bible.app.data.ReadingPosition
 import bible.app.data.ReadingStore
@@ -15,7 +16,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-val TEXT_SIZES_SP = listOf(15f, 17f, 19f, 21f, 23f)
 val LINE_HEIGHTS = listOf(1.5f, 1.7f, 1.9f)
 
 class ReaderViewModel(private val db: BibleDatabase, private val store: ReadingStore) : ViewModel() {
@@ -40,11 +40,11 @@ class ReaderViewModel(private val db: BibleDatabase, private val store: ReadingS
         viewModelScope.launch { store.savePosition(ReadingPosition(ref, firstVisibleVerse)) }
     }
 
-    val textSize: StateFlow<Int> = store.textSize.stateIn(viewModelScope, SharingStarted.Eagerly, 2)
+    val textSizeSp: StateFlow<Float> = store.textSizeSp.stateIn(viewModelScope, SharingStarted.Eagerly, DEFAULT_TEXT_SIZE_SP)
     val lineSpacing: StateFlow<Int> = store.lineSpacing.stateIn(viewModelScope, SharingStarted.Eagerly, 1)
 
-    fun setTextSize(step: Int) {
-        viewModelScope.launch { store.setTextSize(step) }
+    fun setTextSizeSp(sp: Float) {
+        viewModelScope.launch { store.setTextSizeSp(sp) }
     }
 
     fun setLineSpacing(step: Int) {

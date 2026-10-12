@@ -1,5 +1,8 @@
 package bible.app.ui.toc
 
+import bible.app.ui.common.Chip
+import bible.app.domain.ChapterNavigator
+import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -76,7 +79,12 @@ private fun shelves(books: List<Book>): List<List<Book>> =
     }
 
 @Composable
-fun TocScreen(db: BibleDatabase, store: ReadingStore, onOpen: (ChapterRef) -> Unit) {
+fun TocScreen(
+    db: BibleDatabase,
+    store: ReadingStore,
+    onBackToReading: (() -> Unit)? = null,
+    onOpen: (ChapterRef) -> Unit,
+) {
     val scope = rememberCoroutineScope()
     var sheetBook by remember { mutableStateOf<Book?>(null) }
     StatusBarIcons(dark = true)
@@ -93,7 +101,10 @@ fun TocScreen(db: BibleDatabase, store: ReadingStore, onOpen: (ChapterRef) -> Un
 
     Box(Modifier.fillMaxSize().background(BibleColors.Page)) {
         LazyColumn(Modifier.fillMaxSize().testTag("toc-list"), contentPadding = PaddingValues(bottom = 24.dp)) {
-            item { Spacer(Modifier.statusBarsPadding().height(8.dp)) }
+            item { Spacer(Modifier.statusBarsPadding().height(if (onBackToReading != null) 12.dp else 8.dp)) }
+            if (onBackToReading != null) {
+                item(key = "back") { BackToReading(db, store, onBackToReading) }
+            }
             testaments.forEach { (title, testamentShelves) ->
                 item(key = title) {
                     Text(
@@ -171,5 +182,16 @@ private fun BookCover(book: Book, onClick: () -> Unit) {
             }
         }
         Text(chaptersLabel(book.chapters), fontSize = 11.sp, color = BibleColors.Muted)
+    }
+}
+
+/** Возврат к месту чтения: такая же «пилюля», как заголовок главы на экране чтения. */
+@Composable
+private fun BackToReading(db: BibleDatabase, store: ReadingStore, onBack: () -> Unit) {
+    val nav = remember(db) { ChapterNavigator(db.books) }
+    val saved by store.position.collectAsState(initial = null)
+    val label = saved?.let(nav::sanitize)?.let { "‹ ${nav.book(it.ref.bookId).shortTitle} ${it.ref.chapter}" } ?: "‹ К чтению"
+    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 4.dp)) {
+        Chip(label, Modifier.testTag("back-to-reading"), onClick = onBack)
     }
 }
