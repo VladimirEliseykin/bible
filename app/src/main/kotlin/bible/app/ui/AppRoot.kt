@@ -35,6 +35,7 @@ import bible.app.R
 import bible.app.data.BibleDatabase
 import bible.app.data.InstallFailed
 import bible.app.ui.home.HomeScreen
+import bible.app.ui.toc.TocScreen
 import bible.app.ui.theme.BibleColors
 
 sealed interface LoadState {
@@ -130,7 +131,11 @@ private fun Tabs(container: AppContainer, db: BibleDatabase) {
                 }
             }
             composable(Routes.BIBLE) { Box(Modifier.fillMaxSize().testTag("screen-reader")) { Text("reader") } }
-            composable(Routes.TOC) { Box(Modifier.fillMaxSize().testTag("screen-toc")) { Text("toc") } }
+            composable(Routes.TOC) {
+                Box(Modifier.fillMaxSize().testTag("screen-toc")) {
+                    TocScreen(db, container.store) { nav.navigate(Routes.BIBLE) { popUpTo(Routes.BIBLE) { inclusive = true } } }
+                }
+            }
         }
     }
 }
