@@ -34,6 +34,7 @@ import bible.app.AppContainer
 import bible.app.R
 import bible.app.data.BibleDatabase
 import bible.app.data.InstallFailed
+import bible.app.ui.home.HomeScreen
 import bible.app.ui.theme.BibleColors
 
 sealed interface LoadState {
@@ -123,7 +124,11 @@ private fun Tabs(container: AppContainer, db: BibleDatabase) {
         },
     ) { padding ->
         NavHost(nav, startDestination = Routes.HOME, modifier = Modifier.padding(bottom = padding.calculateBottomPadding())) {
-            composable(Routes.HOME) { Box(Modifier.fillMaxSize().testTag("screen-home")) { Text("home") } }
+            composable(Routes.HOME) {
+                Box(Modifier.fillMaxSize().testTag("screen-home")) {
+                    HomeScreen(db, container.store) { nav.openTab(Routes.BIBLE) }
+                }
+            }
             composable(Routes.BIBLE) { Box(Modifier.fillMaxSize().testTag("screen-reader")) { Text("reader") } }
             composable(Routes.TOC) { Box(Modifier.fillMaxSize().testTag("screen-toc")) { Text("toc") } }
         }

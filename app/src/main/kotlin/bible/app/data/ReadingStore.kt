@@ -29,6 +29,14 @@ class ReadingStore(private val context: Context) {
         }
     }
 
+    suspend fun clearPosition() {
+        context.dataStore.edit {
+            it.remove(book)
+            it.remove(chapter)
+            it.remove(verse)
+        }
+    }
+
     val textSize: Flow<Int> = context.dataStore.data.map { (it[size] ?: 2).coerceIn(0, 4) }
 
     suspend fun setTextSize(step: Int) {

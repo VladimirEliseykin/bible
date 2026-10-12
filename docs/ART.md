@@ -12,7 +12,7 @@ no text, serene and contemplative, vertical 4:5
 ```
 
 Куда класть:
-- арт группы: `app/src/main/res/drawable-nodpi/art_group_<group>.webp` (и удалить одноимённый `.xml`-градиент в `drawable/`);
+- арт группы: `app/src/main/res/drawable-nodpi/art_group_<group>.webp` (заменить временный градиент с тем же именем);
 - арт отдельной книги (позже): `app/src/main/res/drawable-nodpi/art_book_<id>.webp` — подхватится автоматически (id: Бытие 1 … Матфей 51 … Откровение 77);
 - карусель главной: список `homeCarouselArts` в `app/src/main/kotlin/bible/app/ui/art/Art.kt`.
 
