@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -112,12 +112,14 @@ fun ChapterPage(
             Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 22.dp).testTag("verse-${v.number}")) {
                 Text(
                     "${v.number}",
-                    Modifier.width(24.dp).padding(top = 19.dp),
+                    Modifier.widthIn(min = 24.dp).padding(top = 19.dp).testTag("verse-number-${v.number}"),
                     fontFamily = Golos,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 11.sp,
                     color = BibleColors.Gold,
                     textAlign = TextAlign.End,
+                    maxLines = 1,
+                    softWrap = false,
                 )
                 Column(Modifier.padding(start = 8.dp).weight(1f)) {
                     Text(

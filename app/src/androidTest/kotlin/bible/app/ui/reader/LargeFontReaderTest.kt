@@ -2,6 +2,7 @@ package bible.app.ui.reader
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -14,6 +15,7 @@ import bible.app.data.ReadingPosition
 import bible.app.ui.theme.BibleTheme
 import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
@@ -38,5 +40,9 @@ class LargeFontReaderTest {
         rule.waitUntil(5_000) { rule.onAllNodes(hasTestTag("verse-1")).fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithTag("chapter-list-22-118").performScrollToIndex(176)
         rule.onNodeWithTag("verse-176").assertExists()
+        val three = rule.onNode(hasTestTag("verse-number-176") and hasAnyAncestor(hasTestTag("chapter-list-22-118"))).fetchSemanticsNode().size.height
+        rule.onNodeWithTag("chapter-list-22-118").performScrollToIndex(1)
+        val one = rule.onNode(hasTestTag("verse-number-1") and hasAnyAncestor(hasTestTag("chapter-list-22-118"))).fetchSemanticsNode().size.height
+        assertEquals("номер 176 должен помещаться в одну строку", one, three)
     }
 }
