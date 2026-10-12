@@ -18,6 +18,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +49,8 @@ import kotlinx.coroutines.flow.filter
 
 /**
  * Одна глава: арт-шапка (индекс 0), затем стихи — индекс элемента списка равен номеру стиха.
- * [onSettled] получает первый видимый стих после остановки прокрутки.
+ * Сохранённый стих восстанавливается один раз за жизнь страницы; [onSettled] получает первый видимый стих,
+ * когда страница текущая и прокрутка остановилась — в том числе при возврате на страницу свайпом.
  */
 @OptIn(FlowPreview::class)
 @Composable
@@ -57,16 +62,21 @@ fun ChapterPage(
     textSizeSp: Float,
     lineHeight: Float,
     listState: LazyListState,
+    isCurrent: () -> Boolean,
     onSettled: (Int) -> Unit,
 ) {
     val context = LocalContext.current
+    var restored by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(listState, verses.isNotEmpty()) {
         if (verses.isEmpty()) return@LaunchedEffect
-        if (initialVerse > 1) listState.scrollToItem(initialVerse.coerceAtMost(verses.size))
-        snapshotFlow { listState.isScrollInProgress to listState.firstVisibleItemIndex }
-            .filter { !it.first }
+        if (!restored) {
+            if (initialVerse > 1) listState.scrollToItem(initialVerse.coerceAtMost(verses.size))
+            restored = true
+        }
+        snapshotFlow { Triple(isCurrent(), listState.isScrollInProgress, listState.firstVisibleItemIndex) }
+            .filter { (current, scrolling, _) -> current && !scrolling }
             .debounce(300)
-            .collect { (_, index) -> onSettled(index.coerceIn(1, verses.size)) }
+            .collect { (_, _, index) -> onSettled(index.coerceIn(1, verses.size)) }
     }
     LazyColumn(
         Modifier.fillMaxSize().background(BibleColors.Background).testTag("chapter-list-${book.id}-$chapter"),

@@ -50,7 +50,6 @@ import bible.app.data.ReadingPosition
 import bible.app.data.ReadingStore
 import bible.app.ui.theme.BibleColors
 import bible.app.ui.theme.Literata
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
 @Composable
@@ -78,10 +77,7 @@ private fun Reader(vm: ReaderViewModel, db: BibleDatabase, begin: ReadingPositio
         }
     }
     LaunchedEffect(pager) {
-        snapshotFlow { pager.settledPage }.drop(1).collect {
-            chromeVisible = true
-            vm.onPositionSettled(nav.refAt(it), 1)
-        }
+        snapshotFlow { pager.settledPage }.collect { chromeVisible = true }
     }
     val current = nav.refAt(pager.currentPage)
     val currentBook = db.books.first { it.id == current.bookId }
@@ -99,7 +95,8 @@ private fun Reader(vm: ReaderViewModel, db: BibleDatabase, begin: ReadingPositio
                 textSizeSp = TEXT_SIZES_SP[textSize],
                 lineHeight = LINE_HEIGHTS[spacing],
                 listState = rememberLazyListState(),
-                onSettled = { verse -> if (pager.settledPage == page) vm.onPositionSettled(ref, verse) },
+                isCurrent = { pager.settledPage == page },
+                onSettled = { verse -> vm.onPositionSettled(ref, verse) },
             )
         }
 
