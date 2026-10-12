@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -23,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import bible.app.ui.theme.BibleColors
@@ -57,12 +60,21 @@ fun TextSizeSheet(size: Int, spacing: Int, onSize: (Int) -> Unit, onSpacing: (In
             Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(BibleColors.Tab).padding(4.dp)) {
                 listOf("Плотно", "Обычно", "Свободно").forEachIndexed { i, label ->
                     Box(
-                        Modifier.weight(1f).height(38.dp).clip(RoundedCornerShape(11.dp))
+                        Modifier.weight(1f).heightIn(min = 38.dp).clip(RoundedCornerShape(11.dp))
                             .background(if (i == spacing) BibleColors.Background else BibleColors.Tab)
                             .clickable { onSpacing(i) }
                             .testTag("spacing-$i"),
                         contentAlignment = Alignment.Center,
-                    ) { Text(label, fontSize = 14.sp, color = if (i == spacing) BibleColors.Ink else BibleColors.Muted) }
+                    ) {
+                        Text(
+                            label,
+                            Modifier.padding(vertical = 8.dp),
+                            fontSize = 14.sp,
+                            color = if (i == spacing) BibleColors.Ink else BibleColors.Muted,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
             Box(Modifier.height(8.dp))
@@ -73,7 +85,8 @@ fun TextSizeSheet(size: Int, spacing: Int, onSize: (Int) -> Unit, onSpacing: (In
 @Composable
 private fun StepButton(label: String, sizeSp: Int, tag: String, onClick: () -> Unit) {
     Box(
-        Modifier.size(48.dp).clip(CircleShape).background(BibleColors.Tab).clickable(onClick = onClick).testTag(tag),
+        Modifier.defaultMinSize(48.dp, 48.dp).clip(CircleShape).background(BibleColors.Tab).clickable(onClick = onClick)
+            .padding(6.dp).testTag(tag),
         contentAlignment = Alignment.Center,
     ) { Text(label, fontFamily = Literata, fontWeight = FontWeight.SemiBold, fontSize = sizeSp.sp, color = BibleColors.Ink) }
 }

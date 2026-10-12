@@ -8,6 +8,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,6 +44,8 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -110,7 +116,8 @@ private fun Reader(vm: ReaderViewModel, db: BibleDatabase, begin: ReadingPositio
                 Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Chip("${currentBook.shortTitle} ${current.chapter} ▾", Modifier.testTag("chapter-title"), onClick = onOpenToc)
+                Chip("${currentBook.shortTitle} ${current.chapter} ▾", Modifier.weight(1f, fill = false).testTag("chapter-title"), onClick = onOpenToc)
+                Spacer(Modifier.width(12.dp))
                 Chip("Аа", Modifier.testTag("text-size"), serif = true) { showTextSheet = true }
             }
         }
@@ -122,7 +129,7 @@ private fun Reader(vm: ReaderViewModel, db: BibleDatabase, begin: ReadingPositio
             exit = slideOutVertically { it * 2 },
         ) {
             Surface(
-                Modifier.padding(horizontal = 14.dp, vertical = 10.dp).fillMaxWidth().height(46.dp),
+                Modifier.padding(horizontal = 14.dp, vertical = 10.dp).fillMaxWidth().heightIn(min = 46.dp),
                 shape = RoundedCornerShape(23.dp),
                 color = Color.White.copy(alpha = 0.95f),
                 shadowElevation = 6.dp,
@@ -135,7 +142,16 @@ private fun Reader(vm: ReaderViewModel, db: BibleDatabase, begin: ReadingPositio
                     NavArrow("‹", "prev-chapter", enabled = pager.currentPage > 0) {
                         scope.launch { pager.animateScrollToPage(pager.currentPage - 1) }
                     }
-                    Text("${currentBook.shortTitle} ${current.chapter}", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = BibleColors.Ink)
+                    Text(
+                        "${currentBook.shortTitle} ${current.chapter}",
+                        Modifier.weight(1f).padding(horizontal = 8.dp),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 15.sp,
+                        color = BibleColors.Ink,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                     NavArrow("›", "next-chapter", enabled = pager.currentPage < nav.totalChapters - 1) {
                         scope.launch { pager.animateScrollToPage(pager.currentPage + 1) }
                     }
@@ -165,6 +181,8 @@ private fun Chip(text: String, modifier: Modifier = Modifier, serif: Boolean = f
             fontWeight = FontWeight.SemiBold,
             fontSize = if (serif) 17.sp else 15.sp,
             fontFamily = if (serif) Literata else null,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -172,7 +190,8 @@ private fun Chip(text: String, modifier: Modifier = Modifier, serif: Boolean = f
 @Composable
 private fun NavArrow(symbol: String, tag: String, enabled: Boolean, onClick: () -> Unit) {
     Box(
-        Modifier.size(38.dp).clip(RoundedCornerShape(19.dp)).clickable(enabled = enabled, onClick = onClick).testTag(tag),
+        Modifier.defaultMinSize(38.dp, 38.dp).clip(RoundedCornerShape(19.dp)).clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 8.dp).testTag(tag),
         contentAlignment = Alignment.Center,
-    ) { Text(symbol, fontSize = 22.sp, color = if (enabled) BibleColors.Ink else BibleColors.Line) }
+    ) { Text(symbol, Modifier.testTag("$tag-glyph"), fontSize = 22.sp, color = if (enabled) BibleColors.Ink else BibleColors.Line) }
 }
