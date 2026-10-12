@@ -1,5 +1,6 @@
 package bible.app.ui.reader
 
+import bible.app.ui.art.ArtImage
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -106,7 +107,7 @@ fun ChapterPage(
     ) {
         item(key = "header", contentType = "header") {
             Box(Modifier.fillMaxWidth().height(210.dp)) {
-                Image(painterResource(artFor(context, book)), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                ArtImage(artFor(context, book), Modifier.fillMaxSize())
                 Box(
                     Modifier.fillMaxSize().background(
                         Brush.verticalGradient(

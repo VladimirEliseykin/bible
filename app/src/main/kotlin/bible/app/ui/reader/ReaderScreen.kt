@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -117,7 +118,8 @@ private fun Reader(vm: ReaderViewModel, begin: ReadingPosition, onImmersiveChang
             atEnd = false
         }
     }
-    val current = nav.refAt(pager.currentPage)
+    // Только смена номера главы перерисовывает заголовки, а не каждый кадр свайпа.
+    val current by remember { derivedStateOf { nav.refAt(pager.currentPage) } }
     val currentBook = nav.book(current.bookId)
     val barVisible = chromeVisible || atEnd
 
@@ -194,7 +196,7 @@ private fun Reader(vm: ReaderViewModel, begin: ReadingPosition, onImmersiveChang
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    NavArrow("‹", "prev-chapter", enabled = pager.currentPage > 0) {
+                    NavArrow("‹", "prev-chapter", enabled = nav.indexOf(current) > 0) {
                         scope.launch { pager.animateScrollToPage(pager.currentPage - 1) }
                     }
                     Text(
@@ -207,7 +209,7 @@ private fun Reader(vm: ReaderViewModel, begin: ReadingPosition, onImmersiveChang
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    NavArrow("›", "next-chapter", enabled = pager.currentPage < nav.totalChapters - 1) {
+                    NavArrow("›", "next-chapter", enabled = nav.indexOf(current) < nav.totalChapters - 1) {
                         scope.launch { pager.animateScrollToPage(pager.currentPage + 1) }
                     }
                 }

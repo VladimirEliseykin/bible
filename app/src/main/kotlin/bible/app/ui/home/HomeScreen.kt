@@ -1,5 +1,6 @@
 package bible.app.ui.home
 
+import bible.app.ui.art.ArtImage
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -91,12 +92,7 @@ fun HomeScreen(db: BibleDatabase, store: ReadingStore, onContinue: () -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             val artBook = book ?: nav.book(FIRST_GOSPEL_CHAPTER.bookId)
-            Image(
-                painterResource(artFor(context, artBook)),
-                null,
-                Modifier.size(72.dp).clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop,
-            )
+            ArtImage(artFor(context, artBook), Modifier.size(72.dp).clip(RoundedCornerShape(12.dp)))
             Column {
                 Text(
                     if (book != null) "${book.shortTitle} ${position.ref.chapter}" else "Начать с Евангелия от Матфея",

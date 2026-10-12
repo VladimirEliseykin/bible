@@ -1,5 +1,6 @@
 package bible.app.ui.toc
 
+import bible.app.ui.art.ArtImage
 import bible.app.ui.common.Chip
 import bible.app.domain.ChapterNavigator
 import androidx.compose.runtime.collectAsState
@@ -155,7 +156,7 @@ private fun BookCover(book: Book, onClick: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Box(Modifier.size(96.dp, 128.dp).clip(RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
-            Image(painterResource(artFor(context, book)), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            ArtImage(artFor(context, book), Modifier.fillMaxSize())
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.18f)))))
             Text(
                 book.abbr,

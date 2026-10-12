@@ -4,7 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
@@ -20,5 +20,5 @@ fun StatusBarIcons(dark: Boolean) {
     val view = LocalView.current
     if (view.isInEditMode) return
     val window = view.context.findActivity()?.window ?: return
-    SideEffect { WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = dark }
+    LaunchedEffect(dark) { WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = dark }
 }

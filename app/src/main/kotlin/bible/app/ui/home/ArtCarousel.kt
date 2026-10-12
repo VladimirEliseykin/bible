@@ -1,5 +1,6 @@
 package bible.app.ui.home
 
+import bible.app.ui.art.ArtImage
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -39,7 +40,7 @@ fun ArtCarousel(arts: List<Int>, modifier: Modifier = Modifier, autoScrollMillis
     }
     Box(modifier.clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)).testTag("carousel")) {
         HorizontalPager(pager, Modifier.fillMaxSize(), beyondViewportPageCount = 1) { page ->
-            Image(painterResource(arts[page]), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            ArtImage(arts[page], Modifier.fillMaxSize())
         }
         Row(
             Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp),
