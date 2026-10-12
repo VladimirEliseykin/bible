@@ -7,6 +7,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -57,6 +60,7 @@ import bible.app.data.ReadingPosition
 import bible.app.data.ReadingStore
 import bible.app.ui.theme.BibleColors
 import bible.app.ui.theme.Literata
+import bible.app.ui.theme.StatusBarIcons
 import kotlinx.coroutines.launch
 
 @Composable
@@ -75,6 +79,8 @@ private fun Reader(vm: ReaderViewModel, db: BibleDatabase, begin: ReadingPositio
     val spacing by vm.lineSpacing.collectAsState()
     var chromeVisible by remember { mutableStateOf(true) }
     var showTextSheet by remember { mutableStateOf(false) }
+    var artVisible by remember { mutableStateOf(true) }
+    StatusBarIcons(dark = !artVisible)
     val hideOnScroll = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
@@ -107,7 +113,16 @@ private fun Reader(vm: ReaderViewModel, db: BibleDatabase, begin: ReadingPositio
                 lineHeight = LINE_HEIGHTS[spacing],
                 listState = rememberLazyListState(),
                 isCurrent = { pager.settledPage == page },
+                onArtVisibleChanged = { artVisible = it },
                 onSettled = { verse -> vm.onPositionSettled(ref, verse) },
+            )
+        }
+
+        if (!artVisible) {
+            Box(
+                Modifier.align(Alignment.TopCenter).fillMaxWidth()
+                    .windowInsetsTopHeight(WindowInsets.statusBars)
+                    .background(BibleColors.Background.copy(alpha = 0.94f)),
             )
         }
 

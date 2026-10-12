@@ -41,6 +41,7 @@ import bible.app.ui.art.artFor
 import bible.app.ui.art.homeCarouselArts
 import bible.app.ui.theme.BibleColors
 import bible.app.ui.theme.Literata
+import bible.app.ui.theme.StatusBarIcons
 import java.util.Optional
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -56,6 +57,7 @@ fun HomeScreen(db: BibleDatabase, store: ReadingStore, onContinue: () -> Unit) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val carouselHeight = LocalConfiguration.current.screenHeightDp.dp * 0.55f
+    StatusBarIcons(dark = false)
 
     Column(Modifier.fillMaxSize().background(BibleColors.Page).verticalScroll(rememberScrollState())) {
         ArtCarousel(homeCarouselArts, Modifier.fillMaxWidth().height(carouselHeight))

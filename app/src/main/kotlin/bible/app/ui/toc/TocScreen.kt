@@ -53,6 +53,7 @@ import bible.app.domain.chaptersLabel
 import bible.app.ui.art.artFor
 import bible.app.ui.theme.BibleColors
 import bible.app.ui.theme.Literata
+import bible.app.ui.theme.StatusBarIcons
 import kotlinx.coroutines.launch
 
 internal fun BookGroup.label(): String = when (this) {
@@ -78,6 +79,7 @@ private fun shelves(books: List<Book>): List<List<Book>> =
 fun TocScreen(db: BibleDatabase, store: ReadingStore, onOpen: (ChapterRef) -> Unit) {
     val scope = rememberCoroutineScope()
     var sheetBook by remember { mutableStateOf<Book?>(null) }
+    StatusBarIcons(dark = true)
     val open: (ChapterRef) -> Unit = { ref ->
         sheetBook = null
         scope.launch {

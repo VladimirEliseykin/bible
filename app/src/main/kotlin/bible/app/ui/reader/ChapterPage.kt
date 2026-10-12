@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -45,7 +46,9 @@ import bible.app.ui.theme.Literata
 import bible.app.ui.toc.label
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 
 /**
  * Одна глава: арт-шапка (индекс 0), затем стихи — индекс элемента списка равен номеру стиха.
@@ -63,6 +66,7 @@ fun ChapterPage(
     lineHeight: Float,
     listState: LazyListState,
     isCurrent: () -> Boolean,
+    onArtVisibleChanged: (Boolean) -> Unit,
     onSettled: (Int) -> Unit,
 ) {
     val context = LocalContext.current
@@ -77,6 +81,14 @@ fun ChapterPage(
             .filter { (current, scrolling, _) -> current && !scrolling }
             .debounce(300)
             .collect { (_, _, index) -> onSettled(index.coerceIn(1, verses.size)) }
+    }
+    val artLimitPx = with(LocalDensity.current) { 150.dp.roundToPx() }
+    LaunchedEffect(listState) {
+        snapshotFlow { isCurrent() to (listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset < artLimitPx) }
+            .filter { it.first }
+            .map { it.second }
+            .distinctUntilChanged()
+            .collect { onArtVisibleChanged(it) }
     }
     LazyColumn(
         Modifier.fillMaxSize().background(BibleColors.Background).testTag("chapter-list-${book.id}-$chapter"),
