@@ -111,7 +111,7 @@ fun ChapterPage(
                 Box(
                     Modifier.fillMaxSize().background(
                         Brush.verticalGradient(
-                            0f to Color.Black.copy(alpha = 0.15f),
+                            0f to Color.Black.copy(alpha = 0.28f),
                             0.35f to Color.Transparent,
                             0.45f to Color.Transparent,
                             1f to BibleColors.Background,

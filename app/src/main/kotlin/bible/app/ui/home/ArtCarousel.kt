@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
@@ -42,6 +43,17 @@ fun ArtCarousel(arts: List<Int>, modifier: Modifier = Modifier, autoScrollMillis
         HorizontalPager(pager, Modifier.fillMaxSize(), beyondViewportPageCount = 1) { page ->
             ArtImage(arts[page], Modifier.fillMaxSize())
         }
+        // Лёгкое затемнение сверху (значки статус-бара) и снизу (точки) — светлые акварели иначе их съедают.
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.verticalGradient(
+                    0f to Color.Black.copy(alpha = 0.42f),
+                    0.2f to Color.Transparent,
+                    0.78f to Color.Transparent,
+                    1f to Color.Black.copy(alpha = 0.22f),
+                ),
+            ),
+        )
         Row(
             Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),

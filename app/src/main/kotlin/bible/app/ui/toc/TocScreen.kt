@@ -55,6 +55,7 @@ import bible.app.data.ReadingStore
 import bible.app.domain.booksLabel
 import bible.app.domain.chaptersLabel
 import bible.app.ui.art.artFor
+import bible.app.ui.art.hasOwnArt
 import bible.app.ui.theme.BibleColors
 import bible.app.ui.theme.Literata
 import bible.app.ui.theme.StatusBarIcons
@@ -157,8 +158,9 @@ private fun BookCover(book: Book, onClick: () -> Unit) {
     ) {
         Box(Modifier.size(96.dp, 128.dp).clip(RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
             ArtImage(artFor(context, book), Modifier.fillMaxSize())
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.18f)))))
-            Text(
+            if (!hasOwnArt(context, book)) {
+                Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.18f)))))
+                Text(
                 book.abbr,
                 style = TextStyle(
                     fontFamily = Literata,
@@ -168,6 +170,7 @@ private fun BookCover(book: Book, onClick: () -> Unit) {
                     shadow = Shadow(Color.Black.copy(alpha = 0.35f), blurRadius = 10f),
                 ),
             )
+            }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(

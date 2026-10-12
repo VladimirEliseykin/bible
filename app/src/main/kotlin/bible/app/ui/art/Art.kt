@@ -23,6 +23,9 @@ fun artForGroup(group: BookGroup): Int = when (group) {
 
 private val bookArtCache = HashMap<Int, Int>()
 
+/** Есть ли у книги собственный арт (а не арт её группы). */
+fun hasOwnArt(context: Context, book: Book): Boolean = artFor(context, book) != artForGroup(book.group)
+
 /** Арт отдельной книги (art_book_<id>), если он добавлен, иначе арт её группы. */
 @SuppressLint("DiscouragedApi")
 @DrawableRes
@@ -31,10 +34,11 @@ fun artFor(context: Context, book: Book): Int = bookArtCache.getOrPut(book.id) {
         .takeIf { it != 0 } ?: artForGroup(book.group)
 }
 
+// Пока своих артов для карусели нет — показываем обложки Пятикнижия.
 val homeCarouselArts: List<Int> = listOf(
-    R.drawable.art_group_gospels,
-    R.drawable.art_group_law,
-    R.drawable.art_group_wisdom,
-    R.drawable.art_group_acts,
-    R.drawable.art_group_prophets,
+    R.drawable.art_book_2,
+    R.drawable.art_book_1,
+    R.drawable.art_book_4,
+    R.drawable.art_book_3,
+    R.drawable.art_book_5,
 )
