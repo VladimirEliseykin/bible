@@ -1,1 +1,9 @@
 docs/mockups/art/
+.gradle/
+build/
+*/build/
+local.properties
+.idea/
+*.iml
+.kotlin/
+.superpowers/
