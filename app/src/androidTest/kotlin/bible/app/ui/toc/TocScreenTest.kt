@@ -77,4 +77,12 @@ class TocScreenTest {
         Espresso.pressBack()
         rule.waitUntil(5_000) { shown("section-LAW") && !shown("section-page-LAW") }
     }
+
+    @Test fun singleBookSectionOpensChaptersDirectly() {
+        rule.setContent { BibleTheme { TocScreen(db, container.store) {} } }
+        rule.onNodeWithTag("toc-sections").performScrollToNode(hasTestTag("section-ACTS"))
+        rule.onNodeWithTag("section-ACTS").performClick()
+        rule.waitUntil(5_000) { shown("chapter-28") }
+        assertTrue(!shown("section-page-ACTS"))
+    }
 }

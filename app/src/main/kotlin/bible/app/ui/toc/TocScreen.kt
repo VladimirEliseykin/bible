@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -148,13 +151,22 @@ fun TocScreen(
             label = "toc",
         ) { current ->
             if (current == null) {
-                Sections(testaments, db, store, onBackToReading) { openGroup = it.name }
+                Sections(testaments, db, store, onBackToReading) { s ->
+                    // Раздел из одной книги (Деяния, Откровение) сразу открывает выбор главы.
+                    if (s.books.size == 1) sheetBook = s.books.single() else openGroup = s.group.name
+                }
             } else {
                 SectionPage(current, onBack = { openGroup = null }) { b ->
                     if (b.chapters == 1) open(ChapterRef(b.id, 1)) else sheetBook = b
                 }
             }
         }
+        // Подложка под статус-бар: карточки не уходят под значки времени и сети.
+        Box(
+            Modifier.align(Alignment.TopCenter).fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(BibleColors.Page.copy(alpha = 0.94f)),
+        )
         sheetBook?.let { b -> ChapterSheet(b, onDismiss = { sheetBook = null }, onPick = { open(ChapterRef(b.id, it)) }) }
     }
 }
@@ -165,7 +177,7 @@ private fun Sections(
     db: BibleDatabase,
     store: ReadingStore,
     onBackToReading: (() -> Unit)?,
-    onSection: (BookGroup) -> Unit,
+    onSection: (Section) -> Unit,
 ) {
     LazyColumn(Modifier.fillMaxSize().testTag("toc-sections"), contentPadding = PaddingValues(bottom = 24.dp)) {
         item { Spacer(Modifier.statusBarsPadding().height(12.dp)) }
@@ -175,7 +187,7 @@ private fun Sections(
         testaments.forEach { (title, books) ->
             item(key = title) { TestamentHeader(title, books.size) }
             sections(books).forEach { s ->
-                item(key = "section-${s.group}") { SectionCard(s) { onSection(s.group) } }
+                item(key = "section-${s.group}") { SectionCard(s) { onSection(s) } }
             }
         }
     }
