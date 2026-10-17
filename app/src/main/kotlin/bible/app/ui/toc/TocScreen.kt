@@ -54,6 +54,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import bible.app.data.BibleDatabase
@@ -112,6 +113,7 @@ fun TocScreen(
     db: BibleDatabase,
     store: ReadingStore,
     onBackToReading: (() -> Unit)? = null,
+    bottomSpace: Dp = 0.dp,
     onOpen: (ChapterRef) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -151,12 +153,12 @@ fun TocScreen(
             label = "toc",
         ) { current ->
             if (current == null) {
-                Sections(testaments, db, store, onBackToReading) { s ->
+                Sections(testaments, db, store, onBackToReading, bottomSpace) { s ->
                     // Раздел из одной книги (Деяния, Откровение) сразу открывает выбор главы.
                     if (s.books.size == 1) sheetBook = s.books.single() else openGroup = s.group.name
                 }
             } else {
-                SectionPage(current, onBack = { openGroup = null }) { b ->
+                SectionPage(current, bottomSpace, onBack = { openGroup = null }) { b ->
                     if (b.chapters == 1) open(ChapterRef(b.id, 1)) else sheetBook = b
                 }
             }
@@ -177,9 +179,10 @@ private fun Sections(
     db: BibleDatabase,
     store: ReadingStore,
     onBackToReading: (() -> Unit)?,
+    bottomSpace: Dp,
     onSection: (Section) -> Unit,
 ) {
-    LazyColumn(Modifier.fillMaxSize().testTag("toc-sections"), contentPadding = PaddingValues(bottom = 24.dp)) {
+    LazyColumn(Modifier.fillMaxSize().testTag("toc-sections"), contentPadding = PaddingValues(bottom = 24.dp + bottomSpace)) {
         item { Spacer(Modifier.statusBarsPadding().height(12.dp)) }
         if (onBackToReading != null) {
             item(key = "back") { BackToReading(db, store, onBackToReading) }
@@ -242,11 +245,11 @@ private fun SectionCard(section: Section, onClick: () -> Unit) {
 }
 
 @Composable
-private fun SectionPage(section: Section, onBack: () -> Unit, onBook: (Book) -> Unit) {
+private fun SectionPage(section: Section, bottomSpace: Dp, onBack: () -> Unit, onBook: (Book) -> Unit) {
     LazyVerticalGrid(
         GridCells.Fixed(2),
         Modifier.fillMaxSize().background(BibleColors.Page).testTag("section-page-${section.group}"),
-        contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 24.dp),
+        contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 24.dp + bottomSpace),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {

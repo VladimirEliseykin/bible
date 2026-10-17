@@ -16,6 +16,7 @@ lucene = "9.12.2"
 benchmark = "1.5.0"
 profileinstaller = "1.4.1"
 uiautomator = "2.3.0"
+haze = "1.6.10"
 
 [libraries]
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -42,6 +43,7 @@ lucene-analysis-common = { group = "org.apache.lucene", name = "lucene-analysis-
 profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "profileinstaller" }
 benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmark" }
 uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
+haze = { group = "dev.chrisbanes.haze", name = "haze", version.ref = "haze" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

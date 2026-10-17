@@ -65,7 +65,7 @@ import bible.app.data.BibleDatabase
 import bible.app.data.ReadingPosition
 import bible.app.data.ReadingStore
 import bible.app.data.TEXT_SIZES_SP
-import bible.app.ui.common.BottomTabsHeight
+import bible.app.ui.common.bottomTabsTop
 import bible.app.ui.common.Chip
 import bible.app.ui.theme.BibleColors
 import bible.app.ui.theme.StatusBarIcons
@@ -126,8 +126,9 @@ private fun Reader(vm: ReaderViewModel, begin: ReadingPosition, onImmersiveChang
     // Плашка главы стоит над вкладками, когда они видны, и опускается к краю, когда спрятаны.
     val density = LocalDensity.current
     val navBottom = with(density) { WindowInsets.navigationBars.getBottom(this).toDp() }
+    val tabsTop = bottomTabsTop()
     val barLift by animateDpAsState(
-        targetValue = if (chromeVisible) BottomTabsHeight + 1.dp + navBottom else navBottom,
+        targetValue = if (chromeVisible) tabsTop else navBottom,
         animationSpec = tween(220),
         label = "barLift",
     )

@@ -4,6 +4,7 @@ import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
@@ -70,5 +71,20 @@ class ImmersiveReadingTest {
         rule.onNodeWithTag("back-to-reading").performClick()
         rule.waitUntil(5_000) { shown("verse-20") && shown("screen-reader") }
         assertEquals(ReadingPosition(ChapterRef(51, 5), 20), runBlocking { container.store.position.first() })
+    }
+
+    @Test fun bottomTabsFloatAboveContentThatScrollsUnderThem() {
+        rule.waitUntil(10_000) { shown("tab-bible") }
+        rule.onNodeWithTag("tab-bible").performClick()
+        rule.waitUntil(5_000) { shown("chapter-title") }
+        rule.onNodeWithTag("chapter-title").performClick()
+        rule.waitUntil(5_000) { shown("toc-sections") }
+        val root = rule.onRoot().fetchSemanticsNode().boundsInRoot
+        val bar = rule.onNodeWithTag("bottom-tabs").fetchSemanticsNode().boundsInRoot
+        val list = rule.onNodeWithTag("toc-sections").fetchSemanticsNode().boundsInRoot
+        val margin = with(rule.density) { 8.dp.toPx() }
+        assertTrue("панель должна отступать от краёв: $bar", bar.left >= margin && root.right - bar.right >= margin)
+        assertTrue("панель должна висеть над низом экрана: $bar", root.bottom - bar.bottom >= margin)
+        assertTrue("список должен уходить под панель: $list vs $bar", list.bottom >= bar.bottom)
     }
 }

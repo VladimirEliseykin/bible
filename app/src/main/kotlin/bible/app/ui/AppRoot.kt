@@ -1,7 +1,9 @@
 package bible.app.ui
 
 import bible.app.ui.common.TabItem
-import bible.app.ui.common.BottomTabsHeight
+import bible.app.ui.common.bottomTabsSpace
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import bible.app.ui.common.BottomTabs
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.asPaddingValues
@@ -110,13 +112,14 @@ private fun Tabs(container: AppContainer, db: BibleDatabase) {
     val route = entry?.destination?.route
     var reading by remember { mutableStateOf(false) }
     val tabsVisible = !(route == Routes.BIBLE && reading)
-    val tabsSpace = BottomTabsHeight + 1.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val tabsSpace = bottomTabsSpace()
+    val hazeState = remember { HazeState() }
 
     Box(Modifier.fillMaxSize().background(BibleColors.Background)) {
-        NavHost(nav, startDestination = Routes.HOME, modifier = Modifier.fillMaxSize()) {
+        NavHost(nav, startDestination = Routes.HOME, modifier = Modifier.fillMaxSize().hazeSource(hazeState)) {
             composable(Routes.HOME) {
-                Box(Modifier.fillMaxSize().padding(bottom = tabsSpace).testTag("screen-home")) {
-                    HomeScreen(db, container.store) { nav.openTab(Routes.BIBLE) }
+                Box(Modifier.fillMaxSize().testTag("screen-home")) {
+                    HomeScreen(db, container.store, bottomSpace = tabsSpace) { nav.openTab(Routes.BIBLE) }
                 }
             }
             composable(Routes.BIBLE) {
@@ -125,8 +128,8 @@ private fun Tabs(container: AppContainer, db: BibleDatabase) {
                 }
             }
             composable(Routes.TOC) {
-                Box(Modifier.fillMaxSize().padding(bottom = tabsSpace).testTag("screen-toc")) {
-                    TocScreen(db, container.store, onBackToReading = { nav.popBackStack() }) {
+                Box(Modifier.fillMaxSize().testTag("screen-toc")) {
+                    TocScreen(db, container.store, onBackToReading = { nav.popBackStack() }, bottomSpace = tabsSpace) {
                         nav.navigate(Routes.BIBLE) { popUpTo(Routes.BIBLE) { inclusive = true } }
                     }
                 }
@@ -143,6 +146,7 @@ private fun Tabs(container: AppContainer, db: BibleDatabase) {
                     TabItem("Главная", R.drawable.ic_home, "tab-home", route == Routes.HOME) { nav.openTab(Routes.HOME) },
                     TabItem("Библия", R.drawable.ic_book, "tab-bible", route == Routes.BIBLE || route == Routes.TOC) { nav.openTab(Routes.BIBLE) },
                 ),
+                hazeState = hazeState,
             )
         }
     }

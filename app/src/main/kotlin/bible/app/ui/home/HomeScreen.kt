@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import bible.app.data.BibleDatabase
@@ -48,7 +49,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @Composable
-fun HomeScreen(db: BibleDatabase, store: ReadingStore, onContinue: () -> Unit) {
+fun HomeScreen(db: BibleDatabase, store: ReadingStore, bottomSpace: Dp = 0.dp, onContinue: () -> Unit) {
     val nav = remember(db) { ChapterNavigator(db.books) }
     // Optional.empty = позиции нет; null = DataStore ещё не ответил, кнопку не трогаем, чтобы не затереть позицию.
     val saved by remember(store) { store.position.map { Optional.ofNullable(it) } }.collectAsState(initial = null)
@@ -107,6 +108,6 @@ fun HomeScreen(db: BibleDatabase, store: ReadingStore, onContinue: () -> Unit) {
                 )
             }
         }
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(24.dp + bottomSpace))
     }
 }

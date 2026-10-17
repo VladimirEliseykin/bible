@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.datastore.preferences)
     implementation(libs.coroutines.android)
     implementation(libs.profileinstaller)
+    implementation(libs.haze)
     baselineProfile(project(":baselineprofile"))
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
