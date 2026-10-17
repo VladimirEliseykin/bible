@@ -42,3 +42,15 @@ val homeCarouselArts: List<Int> = listOf(
     R.drawable.art_book_3,
     R.drawable.art_book_5,
 )
+
+/**
+ * Широкий арт карточки раздела: art_section_<группа>, если он добавлен,
+ * иначе обложка первой книги раздела с собственным артом, иначе арт группы.
+ */
+@SuppressLint("DiscouragedApi")
+@DrawableRes
+fun artForSection(context: Context, group: BookGroup, books: List<Book>): Int =
+    context.resources.getIdentifier("art_section_${group.name.lowercase()}", "drawable", context.packageName)
+        .takeIf { it != 0 }
+        ?: books.firstOrNull { hasOwnArt(context, it) }?.let { artFor(context, it) }
+        ?: artForGroup(group)

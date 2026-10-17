@@ -28,10 +28,14 @@ class BaselineProfileGenerator {
         pager.swipe(Direction.RIGHT, 0.8f)
         device.waitForIdle()
         device.findObject(By.res("chapter-title"))?.click()
-        device.wait(Until.hasObject(By.res("toc-list")), 5_000)
-        val toc = device.findObject(By.res("toc-list"))
+        device.wait(Until.hasObject(By.res("toc-sections")), 5_000)
+        val toc = device.findObject(By.res("toc-sections"))
         repeat(2) { toc.fling(Direction.DOWN) }
-        device.findObject(By.res("shelf-GOSPELS"))?.swipe(Direction.LEFT, 0.8f)
+        device.findObject(By.res("section-GOSPELS"))?.click()
+        device.wait(Until.hasObject(By.res("section-page-GOSPELS")), 5_000)
+        device.findObject(By.res("section-page-GOSPELS"))?.fling(Direction.DOWN)
+        device.pressBack()
+        device.waitForIdle()
         device.pressBack()
         device.waitForIdle()
     }

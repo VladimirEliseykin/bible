@@ -1,10 +1,13 @@
 package bible.app.ui.toc
 
-import bible.app.ui.art.ArtImage
-import bible.app.ui.common.Chip
-import bible.app.domain.ChapterNavigator
-import androidx.compose.runtime.collectAsState
-import androidx.compose.foundation.Image
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,16 +25,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,12 +46,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import bible.app.data.BibleDatabase
@@ -52,15 +59,20 @@ import bible.app.data.BookGroup
 import bible.app.data.ChapterRef
 import bible.app.data.ReadingPosition
 import bible.app.data.ReadingStore
+import bible.app.domain.ChapterNavigator
 import bible.app.domain.booksLabel
 import bible.app.domain.chaptersLabel
+import bible.app.ui.art.ArtImage
 import bible.app.ui.art.artFor
+import bible.app.ui.art.artForSection
 import bible.app.ui.art.hasOwnArt
+import bible.app.ui.common.Chip
 import bible.app.ui.theme.BibleColors
 import bible.app.ui.theme.Literata
 import bible.app.ui.theme.StatusBarIcons
 import kotlinx.coroutines.launch
 
+/** Подпись группы на экране чтения (над «Глава N»). */
 internal fun BookGroup.label(): String = when (this) {
     BookGroup.LAW -> "Пятикнижие"
     BookGroup.HISTORY, BookGroup.HISTORY_LATE -> "Исторические книги"
@@ -73,13 +85,25 @@ internal fun BookGroup.label(): String = when (this) {
     BookGroup.REVELATION -> "Откровение"
 }
 
-/** Книги одного завета, разбитые на полки по группам подряд. */
-private fun shelves(books: List<Book>): List<List<Book>> =
+/** Название карточки раздела: у двух исторических разделов оно должно различаться. */
+private fun BookGroup.sectionTitle(): String = when (this) {
+    BookGroup.HISTORY_LATE -> "Маккавейские книги"
+    else -> label()
+}
+
+private data class Section(val group: BookGroup, val books: List<Book>)
+
+/** Книги одного Завета, разбитые на разделы по группам подряд. */
+private fun sections(books: List<Book>): List<Section> =
     books.fold(mutableListOf<MutableList<Book>>()) { acc, b ->
         if (acc.isEmpty() || acc.last().first().group != b.group) acc += mutableListOf(b) else acc.last() += b
         acc
-    }
+    }.map { Section(it.first().group, it) }
 
+/**
+ * Оглавление в два уровня: разделы Ветхого и Нового Завета, раздел открывает свою страницу с обложками книг.
+ * Системная «Назад» со страницы раздела возвращает к разделам.
+ */
 @Composable
 fun TocScreen(
     db: BibleDatabase,
@@ -89,6 +113,7 @@ fun TocScreen(
 ) {
     val scope = rememberCoroutineScope()
     var sheetBook by remember { mutableStateOf<Book?>(null) }
+    var openGroup by rememberSaveable { mutableStateOf<String?>(null) }
     StatusBarIcons(dark = true)
     val open: (ChapterRef) -> Unit = { ref ->
         sheetBook = null
@@ -98,30 +123,35 @@ fun TocScreen(
         }
     }
     val testaments = remember(db) {
-        listOf("Ветхий Завет" to shelves(db.books.filter { !it.newTestament }), "Новый Завет" to shelves(db.books.filter { it.newTestament }))
+        listOf(
+            "Ветхий Завет" to db.books.filter { !it.newTestament },
+            "Новый Завет" to db.books.filter { it.newTestament },
+        )
     }
+    val section = remember(openGroup) {
+        openGroup?.let { name -> testaments.flatMap { sections(it.second) }.firstOrNull { it.group.name == name } }
+    }
+    BackHandler(enabled = section != null) { openGroup = null }
 
     Box(Modifier.fillMaxSize().background(BibleColors.Page)) {
-        LazyColumn(Modifier.fillMaxSize().testTag("toc-list"), contentPadding = PaddingValues(bottom = 24.dp)) {
-            item { Spacer(Modifier.statusBarsPadding().height(if (onBackToReading != null) 12.dp else 8.dp)) }
-            if (onBackToReading != null) {
-                item(key = "back") { BackToReading(db, store, onBackToReading) }
-            }
-            testaments.forEach { (title, testamentShelves) ->
-                item(key = title) {
-                    Text(
-                        title,
-                        Modifier.padding(start = 18.dp, top = 14.dp, bottom = 4.dp),
-                        fontFamily = Literata,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 24.sp,
-                        color = BibleColors.Ink,
-                    )
+        AnimatedContent(
+            targetState = section,
+            transitionSpec = {
+                if (targetState != null) {
+                    (slideInHorizontally(tween(280)) { it } + fadeIn(tween(200)))
+                        .togetherWith(slideOutHorizontally(tween(280)) { -it / 4 } + fadeOut(tween(200)))
+                } else {
+                    (slideInHorizontally(tween(280)) { -it / 4 } + fadeIn(tween(200)))
+                        .togetherWith(slideOutHorizontally(tween(280)) { it } + fadeOut(tween(200)))
                 }
-                testamentShelves.forEach { shelf ->
-                    item(key = "shelf-${shelf.first().group}") {
-                        Shelf(shelf) { b -> if (b.chapters == 1) open(ChapterRef(b.id, 1)) else sheetBook = b }
-                    }
+            },
+            label = "toc",
+        ) { current ->
+            if (current == null) {
+                Sections(testaments, db, store, onBackToReading) { openGroup = it.name }
+            } else {
+                SectionPage(current, onBack = { openGroup = null }) { b ->
+                    if (b.chapters == 1) open(ChapterRef(b.id, 1)) else sheetBook = b
                 }
             }
         }
@@ -130,22 +160,99 @@ fun TocScreen(
 }
 
 @Composable
-private fun Shelf(books: List<Book>, onBook: (Book) -> Unit) {
-    Column {
-        Row(
-            Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, top = 12.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.Bottom,
-        ) {
-            Text(books.first().group.label(), Modifier.weight(1f), fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = BibleColors.Ink)
-            Text(booksLabel(books.size), fontSize = 12.sp, color = BibleColors.Muted)
+private fun Sections(
+    testaments: List<Pair<String, List<Book>>>,
+    db: BibleDatabase,
+    store: ReadingStore,
+    onBackToReading: (() -> Unit)?,
+    onSection: (BookGroup) -> Unit,
+) {
+    LazyColumn(Modifier.fillMaxSize().testTag("toc-sections"), contentPadding = PaddingValues(bottom = 24.dp)) {
+        item { Spacer(Modifier.statusBarsPadding().height(12.dp)) }
+        if (onBackToReading != null) {
+            item(key = "back") { BackToReading(db, store, onBackToReading) }
         }
-        LazyRow(
-            Modifier.testTag("shelf-${books.first().group}"),
-            contentPadding = PaddingValues(horizontal = 18.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            items(books, key = { it.id }) { BookCover(it) { onBook(it) } }
+        testaments.forEach { (title, books) ->
+            item(key = title) { TestamentHeader(title, books.size) }
+            sections(books).forEach { s ->
+                item(key = "section-${s.group}") { SectionCard(s) { onSection(s.group) } }
+            }
         }
+    }
+}
+
+@Composable
+private fun TestamentHeader(title: String, count: Int) {
+    Column(Modifier.padding(start = 18.dp, end = 18.dp, top = 18.dp, bottom = 12.dp)) {
+        Text(title, fontFamily = Literata, fontWeight = FontWeight.SemiBold, fontSize = 28.sp, color = BibleColors.Ink)
+        Text(booksLabel(count), fontSize = 13.sp, color = BibleColors.Muted)
+        Box(Modifier.padding(top = 8.dp).size(width = 36.dp, height = 2.dp).clip(RoundedCornerShape(1.dp)).background(BibleColors.Gold))
+    }
+}
+
+@Composable
+private fun SectionCard(section: Section, onClick: () -> Unit) {
+    val context = LocalContext.current
+    val books = section.books
+    Box(
+        Modifier
+            .padding(horizontal = 14.dp, vertical = 5.dp)
+            .fillMaxWidth()
+            .height(116.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick)
+            .testTag("section-${section.group}"),
+    ) {
+        ArtImage(artForSection(context, section.group, books), Modifier.fillMaxSize())
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.horizontalGradient(0f to Color.Black.copy(alpha = 0.5f), 0.7f to Color.Black.copy(alpha = 0.05f)),
+            ),
+        )
+        Column(Modifier.align(Alignment.BottomStart).padding(14.dp)) {
+            Text(
+                section.group.sectionTitle(),
+                fontFamily = Literata,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 21.sp,
+                color = Color.White,
+                style = TextStyle(shadow = Shadow(Color.Black.copy(alpha = 0.3f), blurRadius = 8f)),
+            )
+            Text(
+                if (books.size == 1) booksLabel(1) else "${booksLabel(books.size)} · ${books.first().shortTitle} — ${books.last().shortTitle}",
+                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.92f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SectionPage(section: Section, onBack: () -> Unit, onBook: (Book) -> Unit) {
+    LazyVerticalGrid(
+        GridCells.Fixed(2),
+        Modifier.fillMaxSize().background(BibleColors.Page).testTag("section-page-${section.group}"),
+        contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        item(span = { GridItemSpan(2) }) {
+            Column(Modifier.statusBarsPadding().padding(top = 12.dp)) {
+                Chip("‹ Разделы", Modifier.testTag("back-to-sections"), onClick = onBack)
+                Text(
+                    section.group.sectionTitle(),
+                    Modifier.padding(start = 4.dp, top = 16.dp, bottom = 2.dp),
+                    fontFamily = Literata,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 28.sp,
+                    color = BibleColors.Ink,
+                )
+                Text(booksLabel(section.books.size), Modifier.padding(start = 4.dp, bottom = 4.dp), fontSize = 13.sp, color = BibleColors.Muted)
+            }
+        }
+        items(section.books, key = { it.id }) { BookCover(it) { onBook(it) } }
     }
 }
 
@@ -153,39 +260,40 @@ private fun Shelf(books: List<Book>, onBook: (Book) -> Unit) {
 private fun BookCover(book: Book, onClick: () -> Unit) {
     val context = LocalContext.current
     Column(
-        Modifier.width(96.dp).clickable(onClick = onClick).testTag("book-${book.id}"),
+        Modifier.fillMaxWidth().clickable(onClick = onClick).testTag("book-${book.id}"),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Box(Modifier.size(96.dp, 128.dp).clip(RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxWidth().aspectRatio(4f / 5f).clip(RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
             ArtImage(artFor(context, book), Modifier.fillMaxSize())
             if (!hasOwnArt(context, book)) {
                 Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.18f)))))
                 Text(
-                book.abbr,
-                style = TextStyle(
-                    fontFamily = Literata,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 22.sp,
-                    color = Color.White,
-                    shadow = Shadow(Color.Black.copy(alpha = 0.35f), blurRadius = 10f),
-                ),
-            )
+                    book.abbr,
+                    style = TextStyle(
+                        fontFamily = Literata,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 26.sp,
+                        color = Color.White,
+                        shadow = Shadow(Color.Black.copy(alpha = 0.35f), blurRadius = 10f),
+                    ),
+                )
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 book.shortTitle,
                 Modifier.weight(1f, fill = false),
-                fontSize = 12.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = BibleColors.Ink,
-                lineHeight = 15.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
             if (book.deuterocanonical) {
-                Box(Modifier.padding(start = 4.dp).size(5.dp).clip(CircleShape).background(BibleColors.Gold))
+                Box(Modifier.padding(start = 5.dp).size(5.dp).clip(CircleShape).background(BibleColors.Gold))
             }
         }
-        Text(chaptersLabel(book.chapters), fontSize = 11.sp, color = BibleColors.Muted)
+        Text(chaptersLabel(book.chapters), fontSize = 12.sp, color = BibleColors.Muted)
     }
 }
 

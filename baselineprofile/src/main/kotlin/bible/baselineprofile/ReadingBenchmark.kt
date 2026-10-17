@@ -48,12 +48,14 @@ class ReadingBenchmark {
         repeat(2) { pager.swipe(Direction.RIGHT, 0.9f, 3000); device.waitForIdle() }
     }
 
-    @Test fun scrollShelves() = measure {
+    @Test fun scrollSections() = measure {
         device.findObject(By.res("chapter-title")).click()
-        device.wait(Until.hasObject(By.res("toc-list")), 5_000)
-        val toc = device.findObject(By.res("toc-list"))
+        device.wait(Until.hasObject(By.res("toc-sections")), 5_000)
+        val toc = device.findObject(By.res("toc-sections"))
         repeat(3) { toc.fling(Direction.DOWN); device.waitForIdle() }
-        device.findObject(By.res("shelf-PROPHETS"))?.fling(Direction.RIGHT)
+        device.findObject(By.res("section-PROPHETS"))?.click()
+        device.wait(Until.hasObject(By.res("section-page-PROPHETS")), 5_000)
+        device.findObject(By.res("section-page-PROPHETS"))?.fling(Direction.DOWN)
         device.waitForIdle()
     }
 }
