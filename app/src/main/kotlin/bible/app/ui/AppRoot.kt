@@ -1,16 +1,26 @@
 package bible.app.ui
 
+import bible.app.ui.common.TabItem
+import bible.app.ui.common.bottomTabsSpace
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
+import bible.app.ui.common.BottomTabs
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.background
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -42,7 +51,7 @@ import bible.app.ui.theme.BibleColors
 sealed interface LoadState {
     data object Loading : LoadState
     data class Ready(val db: BibleDatabase) : LoadState
-    data object NoSpace : LoadState
+    data class Failed(val noSpace: Boolean) : LoadState
 }
 
 object Routes {
@@ -59,12 +68,12 @@ fun AppRoot(container: AppContainer) {
         state = try {
             LoadState.Ready(container.database())
         } catch (e: InstallFailed) {
-            LoadState.NoSpace
+            LoadState.Failed(e.noSpace)
         }
     }
     when (val s = state) {
         LoadState.Loading -> Box(Modifier.fillMaxSize())
-        LoadState.NoSpace -> NoSpaceScreen {
+        is LoadState.Failed -> InstallErrorScreen(s.noSpace) {
             state = LoadState.Loading
             attempt++
         }
@@ -73,14 +82,18 @@ fun AppRoot(container: AppContainer) {
 }
 
 @Composable
-private fun NoSpaceScreen(onRetry: () -> Unit) {
+private fun InstallErrorScreen(noSpace: Boolean, onRetry: () -> Unit) {
     Column(
         Modifier.fillMaxSize().padding(32.dp).testTag("screen-no-space"),
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            "Недостаточно памяти для установки текста Библии: нужно ~15 МБ. Освободите место и повторите.",
+            if (noSpace) {
+                "Недостаточно памяти для установки текста Библии: нужно около 20 МБ. Освободите место и повторите."
+            } else {
+                "Не удалось подготовить текст Библии. Попробуйте ещё раз; если не поможет — переустановите приложение."
+            },
             textAlign = TextAlign.Center,
         )
         Button(onClick = onRetry) { Text("Повторить") }
@@ -97,50 +110,44 @@ private fun Tabs(container: AppContainer, db: BibleDatabase) {
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route
-    Scaffold(
-        containerColor = BibleColors.Background,
-        bottomBar = {
-            NavigationBar(containerColor = BibleColors.Background) {
-                val colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = BibleColors.Tab,
-                    selectedIconColor = BibleColors.Ink,
-                    selectedTextColor = BibleColors.Ink,
-                    unselectedIconColor = BibleColors.Muted,
-                    unselectedTextColor = BibleColors.Muted,
-                )
-                NavigationBarItem(
-                    selected = route == Routes.HOME,
-                    onClick = { nav.openTab(Routes.HOME) },
-                    icon = { Icon(painterResource(R.drawable.ic_home), null) },
-                    label = { Text("Главная") },
-                    colors = colors,
-                )
-                NavigationBarItem(
-                    selected = route == Routes.BIBLE || route == Routes.TOC,
-                    onClick = { nav.openTab(Routes.BIBLE) },
-                    icon = { Icon(painterResource(R.drawable.ic_book), null) },
-                    label = { Text("Библия") },
-                    colors = colors,
-                )
-            }
-        },
-    ) { padding ->
-        NavHost(nav, startDestination = Routes.HOME, modifier = Modifier.padding(bottom = padding.calculateBottomPadding())) {
+    var reading by remember { mutableStateOf(false) }
+    val tabsVisible = !(route == Routes.BIBLE && reading)
+    val tabsSpace = bottomTabsSpace()
+    val hazeState = remember { HazeState() }
+
+    Box(Modifier.fillMaxSize().background(BibleColors.Background)) {
+        NavHost(nav, startDestination = Routes.HOME, modifier = Modifier.fillMaxSize().hazeSource(hazeState)) {
             composable(Routes.HOME) {
                 Box(Modifier.fillMaxSize().testTag("screen-home")) {
-                    HomeScreen(db, container.store) { nav.openTab(Routes.BIBLE) }
+                    HomeScreen(db, container.store, bottomSpace = tabsSpace) { nav.openTab(Routes.BIBLE) }
                 }
             }
             composable(Routes.BIBLE) {
                 Box(Modifier.fillMaxSize().testTag("screen-reader")) {
-                    ReaderScreen(db, container.store) { nav.navigate(Routes.TOC) }
+                    ReaderScreen(db, container.store, onImmersiveChange = { reading = it }) { nav.navigate(Routes.TOC) }
                 }
             }
             composable(Routes.TOC) {
                 Box(Modifier.fillMaxSize().testTag("screen-toc")) {
-                    TocScreen(db, container.store) { nav.navigate(Routes.BIBLE) { popUpTo(Routes.BIBLE) { inclusive = true } } }
+                    TocScreen(db, container.store, onBackToReading = { nav.popBackStack() }, bottomSpace = tabsSpace) {
+                        nav.navigate(Routes.BIBLE) { popUpTo(Routes.BIBLE) { inclusive = true } }
+                    }
                 }
             }
+        }
+        AnimatedVisibility(
+            tabsVisible,
+            Modifier.align(Alignment.BottomCenter),
+            enter = slideInVertically { it } + fadeIn(tween(220)),
+            exit = slideOutVertically { it } + fadeOut(tween(220)),
+        ) {
+            BottomTabs(
+                listOf(
+                    TabItem("Главная", R.drawable.ic_home, "tab-home", route == Routes.HOME) { nav.openTab(Routes.HOME) },
+                    TabItem("Библия", R.drawable.ic_book, "tab-bible", route == Routes.BIBLE || route == Routes.TOC) { nav.openTab(Routes.BIBLE) },
+                ),
+                hazeState = hazeState,
+            )
         }
     }
 }

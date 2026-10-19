@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- В резервную копию попадает только место чтения и настройки текста; база Библии ставится заново из APK. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="datastore/reading.preferences_pb" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="datastore/reading.preferences_pb" />
+    </device-transfer>
+</data-extraction-rules>

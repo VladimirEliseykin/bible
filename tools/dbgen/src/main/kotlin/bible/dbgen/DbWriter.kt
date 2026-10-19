@@ -18,6 +18,10 @@ fun validate(books: List<BookInfo>, verses: Map<Int, List<ParsedVerse>>): List<S
         list.filter { it.text.isBlank() }.forEach { errors += "${b.abbr} ${it.chapter}:${it.verse}: пустой стих" }
         list.groupBy { it.chapter to it.verse }.filterValues { it.size > 1 }.keys
             .forEach { (c, v) -> errors += "${b.abbr} $c:$v: повтор номера стиха" }
+        list.groupBy { it.chapter }.forEach { (c, vs) ->
+            val numbers = vs.map { it.verse }.toSortedSet().toList()
+            if (numbers != (1..numbers.size).toList()) errors += "${b.abbr} $c: пропуск в номерах стихов ($numbers)"
+        }
         list.filter { it.verse > 999 || it.chapter > 999 }
             .forEach { errors += "${b.abbr} ${it.chapter}:${it.verse}: номер вне диапазона id" }
     }

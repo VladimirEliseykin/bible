@@ -4,7 +4,10 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 
-class InstallFailed(cause: Throwable) : Exception(cause)
+class InstallFailed(cause: Throwable) : Exception(cause) {
+    /** Сбой из-за нехватки места на устройстве (ENOSPC где-то в цепочке причин). */
+    val noSpace: Boolean = generateSequence(cause) { it.cause }.any { it.message.orEmpty().contains("ENOSPC") || it.message.orEmpty().contains("No space left") }
+}
 
 /**
  * Копирует базу из assets во внутреннюю память один раз на [version] (версию сборки приложения).

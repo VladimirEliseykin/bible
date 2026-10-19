@@ -1,5 +1,6 @@
 package bible.app.ui.toc
 
+import bible.app.ui.art.ArtImage
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,8 +52,8 @@ fun ChapterSheet(book: Book, onDismiss: () -> Unit, onPick: (Int) -> Unit) {
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
     ) {
         Column(Modifier.navigationBarsPadding()) {
-            Box(Modifier.fillMaxWidth().height(110.dp)) {
-                Image(painterResource(artFor(context, book)), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            Box(Modifier.fillMaxWidth().height(160.dp)) {
+                ArtImage(artFor(context, book), Modifier.fillMaxSize())
                 Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.35f)))))
                 Column(Modifier.align(Alignment.BottomStart).padding(16.dp)) {
                     Text(book.shortTitle, fontFamily = Literata, fontWeight = FontWeight.SemiBold, fontSize = 28.sp, color = Color.White)

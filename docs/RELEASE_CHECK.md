@@ -16,3 +16,17 @@
 Ручные проверки: процесс убит системой посреди чтения (Мф 1, стих 11) → после перезапуска открывается тот же стих ✓.
 
 Что сделать на реальном телефоне: повторить замер холодного старта и `dumpsys gfxinfo` при прокрутке Пс 118; если старт > 500 мс — добавить Baseline Profile.
+
+## Плавность после Baseline Profile (2026-10-12)
+
+Эмулятор Medium_Phone с окном (`-gpu host`), release-сборка с профилем, арты 1080×1350.
+Макробенчмарк `baselineprofile/…/ReadingBenchmark` (`FrameTimingMetric`, CPU-время кадра):
+
+| Сценарий | P50 | P90 | P99 |
+|---|---|---|---|
+| Прокрутка главы | 6,7 мс | 19,7 мс | 24,7 мс |
+| Листание глав | 7,7 мс | 21,0 мс | 23,6 мс |
+| Полки оглавления | 8,2 мс | 21,2 мс | 24,2 мс |
+
+Бюджет кадра при 60 Гц — 16,7 мс. Эмулятор даёт хвост P90 ~20 мс даже на простом списке текста; повторить на реальном телефоне:
+`./gradlew :baselineprofile:connectedBenchmarkReleaseAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=bible.baselineprofile.ReadingBenchmark`.

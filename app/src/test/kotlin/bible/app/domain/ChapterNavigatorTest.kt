@@ -26,7 +26,14 @@ class ChapterNavigatorTest {
     }
 
     @Test fun sanitizeKeepsValid() = assertEquals(ReadingPosition(ChapterRef(1, 2), 7), nav.sanitize(ReadingPosition(ChapterRef(1, 2), 7)))
-    @Test fun sanitizeUnknownBookGoesToStart() = assertEquals(ReadingPosition(ChapterRef(1, 1), 1), nav.sanitize(ReadingPosition(ChapterRef(99, 5), 3)))
-    @Test fun sanitizeChapterTooBigGoesToBookStart() = assertEquals(ReadingPosition(ChapterRef(3, 1), 1), nav.sanitize(ReadingPosition(ChapterRef(3, 9), 3)))
+    @Test fun sanitizeUnknownBookGoesToStartWhenNoGospel() = assertEquals(ReadingPosition(ChapterRef(1, 1), 1), nav.sanitize(ReadingPosition(ChapterRef(99, 5), 3)))
+    @Test fun sanitizeChapterTooBigGoesToLastChapter() = assertEquals(ReadingPosition(ChapterRef(3, 2), 1), nav.sanitize(ReadingPosition(ChapterRef(3, 9), 3)))
     @Test fun sanitizeZeroChapterAndVerse() = assertEquals(ReadingPosition(ChapterRef(1, 1), 1), nav.sanitize(ReadingPosition(ChapterRef(1, 0), 0)))
+
+    @Test fun sanitizeUnknownBookGoesToMatthew1() {
+        val withGospel = ChapterNavigator(listOf(book(1, 3), book(51, 28)))
+        assertEquals(ReadingPosition(ChapterRef(51, 1), 1), withGospel.sanitize(ReadingPosition(ChapterRef(99, 5), 3)))
+    }
+
+    @Test fun bookLookupById() = assertEquals(2, nav.book(2).id)
 }

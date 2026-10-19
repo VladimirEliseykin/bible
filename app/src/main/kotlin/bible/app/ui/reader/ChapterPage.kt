@@ -1,5 +1,6 @@
 package bible.app.ui.reader
 
+import bible.app.ui.art.ArtImage
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -45,7 +47,9 @@ import bible.app.ui.theme.Literata
 import bible.app.ui.toc.label
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 
 /**
  * Одна глава: арт-шапка (индекс 0), затем стихи — индекс элемента списка равен номеру стиха.
@@ -63,6 +67,8 @@ fun ChapterPage(
     lineHeight: Float,
     listState: LazyListState,
     isCurrent: () -> Boolean,
+    onArtVisibleChanged: (Boolean) -> Unit,
+    onAtEndChanged: (Boolean) -> Unit,
     onSettled: (Int) -> Unit,
 ) {
     val context = LocalContext.current
@@ -78,21 +84,37 @@ fun ChapterPage(
             .debounce(300)
             .collect { (_, _, index) -> onSettled(index.coerceIn(1, verses.size)) }
     }
+    val artLimitPx = with(LocalDensity.current) { 150.dp.roundToPx() }
+    LaunchedEffect(listState) {
+        snapshotFlow { isCurrent() to (listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset < artLimitPx) }
+            .filter { it.first }
+            .map { it.second }
+            .distinctUntilChanged()
+            .collect { onArtVisibleChanged(it) }
+    }
+    LaunchedEffect(listState, verses.isNotEmpty()) {
+        if (verses.isEmpty()) return@LaunchedEffect
+        snapshotFlow { isCurrent() to !listState.canScrollForward }
+            .filter { it.first }
+            .map { it.second }
+            .distinctUntilChanged()
+            .collect { onAtEndChanged(it) }
+    }
     LazyColumn(
         Modifier.fillMaxSize().background(BibleColors.Background).testTag("chapter-list-${book.id}-$chapter"),
         state = listState,
         contentPadding = PaddingValues(bottom = 140.dp),
     ) {
-        item(key = "header") {
+        item(key = "header", contentType = "header") {
             Box(Modifier.fillMaxWidth().height(210.dp)) {
-                Image(painterResource(artFor(context, book)), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                ArtImage(artFor(context, book), Modifier.fillMaxSize())
                 Box(
                     Modifier.fillMaxSize().background(
                         Brush.verticalGradient(
-                            0f to Color.Black.copy(alpha = 0.15f),
+                            0f to Color.Black.copy(alpha = 0.28f),
                             0.35f to Color.Transparent,
                             0.45f to Color.Transparent,
-                            1f to BibleColors.Background.copy(alpha = 0.97f),
+                            1f to BibleColors.Background,
                         ),
                     ),
                 )
@@ -108,7 +130,7 @@ fun ChapterPage(
                 }
             }
         }
-        items(verses, key = { it.id }) { v ->
+        items(verses, key = { it.id }, contentType = { "verse" }) { v ->
             Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 22.dp).testTag("verse-${v.number}")) {
                 Text(
                     "${v.number}",

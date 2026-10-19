@@ -34,4 +34,9 @@ class DbWriterTest {
         val verses = (1..4).map { ParsedVerse(it, 1, "a") } + ParsedVerse(1, 1, "b")
         assertTrue(validate(listOf(book), mapOf(book.id to verses)).any { it.contains("повтор") })
     }
+
+    @Test fun validationReportsGapInVerseNumbers() {
+        val verses = (1..4).map { ParsedVerse(it, 1, "a") } + ParsedVerse(1, 3, "c")
+        assertTrue(validate(listOf(book), mapOf(book.id to verses)).any { it.contains("пропуск") })
+    }
 }

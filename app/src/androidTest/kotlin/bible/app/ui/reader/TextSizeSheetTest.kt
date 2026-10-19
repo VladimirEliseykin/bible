@@ -12,13 +12,13 @@ class TextSizeSheetTest {
     @get:Rule val rule = createComposeRule()
 
     @Test fun stepsAreClampedAndReported() {
-        var size = 4
+        var size = 8
         var spacing = 1
         rule.setContent { BibleTheme { TextSizeSheet(size, spacing, { size = it }, { spacing = it }) {} } }
         rule.onNodeWithTag("text-larger").performClick()
-        assertEquals(4, size)
+        assertEquals(8, size)
         rule.onNodeWithTag("text-smaller").performClick()
-        assertEquals(3, size)
+        assertEquals(7, size)
         rule.onNodeWithTag("spacing-2").performClick()
         assertEquals(2, spacing)
     }
