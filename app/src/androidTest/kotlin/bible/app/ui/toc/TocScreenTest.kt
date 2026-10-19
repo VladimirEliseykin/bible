@@ -5,6 +5,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -84,5 +85,20 @@ class TocScreenTest {
         rule.onNodeWithTag("section-ACTS").performClick()
         rule.waitUntil(5_000) { shown("chapter-28") }
         assertTrue(!shown("section-page-ACTS"))
+    }
+
+    @Test fun chapterSheetTakesAtMostHalfTheScreenWithLargerArt() {
+        rule.setContent { BibleTheme { TocScreen(db, container.store) {} } }
+        openSection("LAW")
+        rule.onNodeWithTag("book-3").performClick()
+        rule.waitUntil(5_000) { shown("chapter-sheet") }
+        rule.waitForIdle()
+        val screen = rule.activity.window.decorView.height
+        val sheet = rule.onNodeWithTag("chapter-sheet").fetchSemanticsNode().size.height
+        val art = rule.onNodeWithTag("chapter-sheet-art").fetchSemanticsNode().size.height
+        assertTrue("лист $sheet px > половины экрана $screen px", sheet <= screen / 2 + 2)
+        assertTrue("картинка $art px меньше 190dp", art >= with(rule.density) { 190.dp.roundToPx() })
+        rule.onNodeWithTag("chapter-grid").performScrollToNode(hasTestTag("chapter-27"))
+        rule.onNodeWithTag("chapter-27").assertExists()
     }
 }

@@ -29,6 +29,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -44,6 +46,8 @@ import bible.app.ui.theme.Literata
 @Composable
 fun ChapterSheet(book: Book, onDismiss: () -> Unit, onPick: (Int) -> Unit) {
     val context = LocalContext.current
+    // Лист с картинкой и главами — не выше половины экрана; длинные книги прокручивают сетку глав.
+    val halfScreen = with(LocalDensity.current) { (LocalWindowInfo.current.containerSize.height / 2).toDp() }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -51,8 +55,8 @@ fun ChapterSheet(book: Book, onDismiss: () -> Unit, onPick: (Int) -> Unit) {
         dragHandle = null,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
     ) {
-        Column(Modifier.navigationBarsPadding()) {
-            Box(Modifier.fillMaxWidth().height(160.dp)) {
+        Column(Modifier.heightIn(max = halfScreen).navigationBarsPadding().testTag("chapter-sheet")) {
+            Box(Modifier.fillMaxWidth().height(200.dp).testTag("chapter-sheet-art")) {
                 ArtImage(artFor(context, book), Modifier.fillMaxSize())
                 Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.35f)))))
                 Column(Modifier.align(Alignment.BottomStart).padding(16.dp)) {
@@ -62,7 +66,7 @@ fun ChapterSheet(book: Book, onDismiss: () -> Unit, onPick: (Int) -> Unit) {
             }
             LazyVerticalGrid(
                 GridCells.Fixed(6),
-                Modifier.fillMaxWidth().heightIn(max = 360.dp),
+                Modifier.fillMaxWidth().weight(1f, fill = false).testTag("chapter-grid"),
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(7.dp),
                 verticalArrangement = Arrangement.spacedBy(7.dp),
