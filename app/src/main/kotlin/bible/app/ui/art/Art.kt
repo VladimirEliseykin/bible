@@ -54,3 +54,30 @@ fun artForSection(context: Context, group: BookGroup, books: List<Book>): Int =
         .takeIf { it != 0 }
         ?: books.firstOrNull { hasOwnArt(context, it) }?.let { artFor(context, it) }
         ?: artForGroup(group)
+
+/**
+ * Где по высоте главный сюжет арта (0 — верх, 1 — низ). Узкие шапки (лист глав, глава, карусель)
+ * обрезают картинку вокруг этой точки. Не указан — середина.
+ */
+val ART_FOCUS_Y: Map<String, Float> = mapOf(
+    "art_book_1" to 0.55f, // Эдем: древо и лев
+    "art_book_2" to 0.76f, // Исход: народ на дне моря
+    "art_book_3" to 0.72f, // Левит: скиния и священник
+    "art_book_4" to 0.48f, // Числа: медный змий и Моисей
+    "art_book_5" to 0.66f, // Второзаконие: Моисей над долиной
+    "art_book_6" to 0.67f, // Иисус Навин: стены и ковчег
+    "art_book_7" to 0.66f, // Судьи: Гедеон и руно
+    "art_book_8" to 0.66f, // Руфь в поле
+    "art_book_9" to 0.5f, // Давид и Голиаф
+    "art_book_10" to 0.6f, // ковчег идёт в Иерусалим
+    "art_book_11" to 0.55f, // храм Соломона
+    "art_book_12" to 0.36f, // огненная колесница
+    "art_book_13" to 0.64f, // левиты перед скинией
+    "art_book_14" to 0.56f, // храм и огонь на жертвеннике
+    "art_book_15" to 0.62f, // основание храма
+    "art_book_16" to 0.6f, // стены и строители
+    "art_book_17" to 0.7f, // караван
+    "art_book_18" to 0.66f, // Товия и Рафаил
+    "art_book_19" to 0.62f, // Ветилуя и две жены
+    "art_book_20" to 0.62f, // Есфирь перед троном
+)

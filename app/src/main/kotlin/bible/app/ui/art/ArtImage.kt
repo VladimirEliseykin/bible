@@ -61,6 +61,7 @@ private fun decode(resources: Resources, res: Int, targetWidth: Int, targetHeigh
 @Composable
 fun ArtImage(@DrawableRes res: Int, modifier: Modifier = Modifier) {
     val resources = LocalContext.current.resources
+    val focus = remember(res) { ART_FOCUS_Y[runCatching { resources.getResourceEntryName(res) }.getOrNull()] ?: 0.5f }
     BoxWithConstraints(modifier.background(BibleColors.Page)) {
         val w = constraints.maxWidth.takeIf { constraints.hasBoundedWidth } ?: 0
         val h = constraints.maxHeight.takeIf { constraints.hasBoundedHeight } ?: 0
@@ -71,7 +72,13 @@ fun ArtImage(@DrawableRes res: Int, modifier: Modifier = Modifier) {
         }
         val alpha by animateFloatAsState(if (bitmap != null) 1f else 0f, tween(180), label = "art")
         bitmap?.let {
-            Image(it, null, Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha }, contentScale = ContentScale.Crop)
+            Image(
+                it,
+                null,
+                Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha },
+                alignment = FocusAlignment(focus),
+                contentScale = ContentScale.Crop,
+            )
         } ?: Box(Modifier.fillMaxSize())
     }
 }

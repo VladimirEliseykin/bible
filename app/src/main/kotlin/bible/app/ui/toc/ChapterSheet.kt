@@ -52,7 +52,7 @@ fun ChapterSheet(book: Book, onDismiss: () -> Unit, onPick: (Int) -> Unit) {
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
     ) {
         Column(Modifier.navigationBarsPadding()) {
-            Box(Modifier.fillMaxWidth().height(110.dp)) {
+            Box(Modifier.fillMaxWidth().height(160.dp)) {
                 ArtImage(artFor(context, book), Modifier.fillMaxSize())
                 Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.35f)))))
                 Column(Modifier.align(Alignment.BottomStart).padding(16.dp)) {
