@@ -6,6 +6,8 @@
 
 **Architecture:** `tools/commentary` (Kotlin/JVM) собирает пакет из JSON по главам и общедоступных источников, проверяет его и пишет `commentary.db` + манифест. Приложение скачивает пакет с GitHub Releases (`PackManager`), читает его (`CommentaryDatabase`), показывает `VerseScreen` (HorizontalPager по всем стихам Библии, шапка на Haze-стекле, вкладки, нижняя плашка).
 
+**Изменение после Task 8 (решение владельца):** база объяснений входит в APK, скачивания нет. `PackManager`, карточка «Скачать», разрешение INTERNET и релиз пакета убраны; `commentary.db` собирает задача приложения `generateCommentaryDb`, ставит `AssetInstaller`. Пункты ниже про скачивание выполнены и затем заменены этим решением.
+
 **Tech Stack:** Kotlin 2.2.20, Compose (BOM 2025.09.01), kotlinx-serialization-json 1.9.0, Haze 1.6.10, sqlite-jdbc (только инструмент), `HttpURLConnection` (без OkHttp), `java.util.zip`.
 
 **Spec:** `docs/superpowers/specs/2026-10-26-verse-explanations-design.md`
@@ -113,5 +115,5 @@ class CommentaryDatabase(file: File) { fun note(verseId: Int): VerseNote?; fun c
 
 ### Task 9: Публикация пилота и проверка
 
-- [ ] Собрать пакет пилота, создать релиз `commentary-v1` в репозитории с `commentary.db.gz` и `commentary.json` (это публикация в открытый репозиторий владельца — разрешено его просьбой «реализовывай»).
-- [ ] Release-сборка, установка на эмулятор, скачивание пакета, открыть Сир 2:1 — снимки экрана; полный прогон тестов. Обновить Baseline Profile (сценарий: открыть стих). commit `chore: publish pilot commentary pack`.
+- [x] База пилота собирается вместе с приложением (`generateCommentaryDb`).
+- [ ] Release-сборка, установка на эмулятор, открыть Сир 2:1 — снимки экрана; полный прогон тестов. Обновить Baseline Profile (сценарий: открыть стих).

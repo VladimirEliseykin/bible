@@ -7,7 +7,7 @@ import bible.commentary.model.decodeChapter
 import bible.commentary.model.decodeNote
 import java.io.File
 
-/** Скачанный пакет объяснений, только чтение. Запросы короткие (по первичному ключу). */
+/** База объяснений стихов (из APK), только чтение. Запросы короткие (по первичному ключу). */
 class CommentaryDatabase(file: File) {
     private val db: SQLiteDatabase = SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY)
 

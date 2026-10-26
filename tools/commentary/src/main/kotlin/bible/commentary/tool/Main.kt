@@ -5,19 +5,17 @@ import bible.commentary.model.ChapterNote
 import bible.commentary.model.Json
 import bible.commentary.model.VerseNote
 import java.io.File
-import java.security.MessageDigest
 import java.sql.DriverManager
-import java.util.zip.GZIPOutputStream
 import kotlin.system.exitProcess
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.Serializable
 
 @Serializable private data class SourceJson(val id: String, val title: String, val author: String, val url: String, val license: String)
 
-/** Аргументы: bible.db, каталог notes, sources.json, CSlElizabeth-CS.json, выходной каталог, версия пакета. */
+/** Аргументы: bible.db, каталог notes, sources.json, CSlElizabeth-CS.json, путь к commentary.db, версия данных. */
 fun main(args: Array<String>) {
-    require(args.size == 6) { "usage: commentary <bible.db> <notesDir> <sources.json> <csl.json> <outDir> <version>" }
-    val (bibleDb, notesDir, sourcesFile, cslFile, outDir) = args.take(5).map(::File)
+    require(args.size == 6) { "usage: commentary <bible.db> <notesDir> <sources.json> <csl.json> <out.db> <version>" }
+    val (bibleDb, notesDir, sourcesFile, cslFile, db) = args.take(5).map(::File)
     val version = args[5].toInt()
 
     val verseIds = HashSet<Int>()
@@ -48,13 +46,6 @@ fun main(args: Array<String>) {
     }
     val csl = loadCsl(cslFile, bookChapters, verseIds)
 
-    val db = File(outDir, "commentary.db")
     writePack(db, notes, chapters, csl, sources.map { Source(it.id, it.title, it.author, it.url, it.license) }, version)
-    val gz = File(outDir, "commentary.db.gz")
-    GZIPOutputStream(gz.outputStream()).use { out -> db.inputStream().use { it.copyTo(out) } }
-    val sha = MessageDigest.getInstance("SHA-256").digest(gz.readBytes()).joinToString("") { "%02x".format(it) }
-    File(outDir, "commentary.json").writeText(
-        """{"version":$version,"url":"commentary.db.gz","size":${gz.length()},"sha256":"$sha","bytes_unpacked":${db.length()}}""" + "\n",
-    )
-    println("commentary: ${notes.size} стихов, ${chapters.size} глав, ${csl.size} стихов ЦС, ${gz.length() / 1024} КБ сжато → $outDir")
+    println("commentary: ${notes.size} стихов, ${chapters.size} глав, ${csl.size} стихов ЦС, ${db.length() / 1024} КБ → $db")
 }

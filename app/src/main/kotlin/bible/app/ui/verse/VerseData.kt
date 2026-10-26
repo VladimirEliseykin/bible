@@ -16,7 +16,6 @@ data class VerseData(
     val id: Int,
     val book: Book,
     val text: String,
-    val packInstalled: Boolean,
     val note: VerseNote?,
     val context: List<Item>,
     val refs: List<RefView>,
@@ -47,11 +46,11 @@ fun refLabel(books: Map<Int, Book>, from: Int, to: Int?): String {
     return if (VerseNavigator.chapter(to) == VerseNavigator.chapter(from)) "$b $start–${VerseNavigator.verse(to)}" else "$b $start–${VerseNavigator.label(to)}"
 }
 
-fun loadVerse(db: BibleDatabase, books: Map<Int, Book>, pack: CommentaryDatabase?, id: Int): VerseData {
+fun loadVerse(db: BibleDatabase, books: Map<Int, Book>, commentary: CommentaryDatabase, id: Int): VerseData {
     val book = books.getValue(VerseNavigator.book(id))
     val text = db.verse(id)?.text.orEmpty()
-    val note = pack?.note(id)
-    val chapterContext = pack?.chapter(book.id, VerseNavigator.chapter(id))?.context.orEmpty()
+    val note = commentary.note(id)
+    val chapterContext = commentary.chapter(book.id, VerseNavigator.chapter(id))?.context.orEmpty()
     val refs = note?.refs.orEmpty().map { r ->
         val ids = if (r.to == null) listOf(r.verse_id) else db.verseIds.filter { it in r.verse_id..r.to!! }
         RefView(r.verse_id, refLabel(books, r.verse_id, r.to), ids.mapNotNull { db.verse(it)?.text }.joinToString(" "))
@@ -61,13 +60,12 @@ fun loadVerse(db: BibleDatabase, books: Map<Int, Book>, pack: CommentaryDatabase
         id = id,
         book = book,
         text = text,
-        packInstalled = pack != null,
         note = note,
         context = note?.context.orEmpty() + chapterContext,
         refs = refs,
         synodal = text,
-        csl = pack?.translation(id, "csl"),
+        csl = commentary.translation(id, "csl"),
         fathers = fathers,
-        sourceUrls = fathers.map { it.source }.distinct().mapNotNull { s -> pack?.sourceUrl(s)?.let { s to it } }.toMap(),
+        sourceUrls = fathers.map { it.source }.distinct().mapNotNull { s -> commentary.sourceUrl(s)?.let { s to it } }.toMap(),
     )
 }

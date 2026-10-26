@@ -10,4 +10,3 @@ local.properties
 keystore.properties
 *.jks
 *.keystore
-tools/commentary/sources/*.json

@@ -10,7 +10,6 @@ import bible.app.BibleApp
 import bible.app.MainActivity
 import bible.app.data.ChapterRef
 import bible.app.data.ReadingPosition
-import java.io.File
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -23,10 +22,6 @@ class VerseNavigationTest {
     private val container = (inst.targetContext.applicationContext as BibleApp).container
 
     @Before fun setUp() {
-        val dir = File(inst.targetContext.noBackupFilesDir, "commentary").apply { mkdirs() }
-        inst.context.assets.open("commentary-pilot.db").use { i -> File(dir, "commentary.db").outputStream().use { i.copyTo(it) } }
-        File(dir, "commentary.version").writeText("1")
-        container.pack.refresh()
         runBlocking { container.store.savePosition(ReadingPosition(ChapterRef(27, 2), 1)) }
     }
 

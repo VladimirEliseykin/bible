@@ -42,9 +42,9 @@ class LargeFontReaderTest {
         rule.waitUntil(5_000) { rule.onAllNodes(hasTestTag("verse-1")).fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithTag("chapter-list-22-118").performScrollToIndex(176)
         rule.onNodeWithTag("verse-176").assertExists()
-        val three = rule.onNode(hasTestTag("verse-number-176") and hasAnyAncestor(hasTestTag("chapter-list-22-118"))).fetchSemanticsNode().size.height
+        val three = rule.onNode(hasTestTag("verse-number-176") and hasAnyAncestor(hasTestTag("chapter-list-22-118")), useUnmergedTree = true).fetchSemanticsNode().size.height
         rule.onNodeWithTag("chapter-list-22-118").performScrollToIndex(1)
-        val one = rule.onNode(hasTestTag("verse-number-1") and hasAnyAncestor(hasTestTag("chapter-list-22-118"))).fetchSemanticsNode().size.height
+        val one = rule.onNode(hasTestTag("verse-number-1") and hasAnyAncestor(hasTestTag("chapter-list-22-118")), useUnmergedTree = true).fetchSemanticsNode().size.height
         assertEquals("номер 176 должен помещаться в одну строку", one, three)
     }
 

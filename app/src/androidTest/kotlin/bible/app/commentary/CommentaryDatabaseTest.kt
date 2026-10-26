@@ -2,7 +2,8 @@ package bible.app.commentary
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import java.io.File
+import bible.app.BibleApp
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -11,11 +12,10 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class CommentaryDatabaseTest {
+    /** Та же база, что лежит в APK. */
     private val db: CommentaryDatabase by lazy {
-        val inst = InstrumentationRegistry.getInstrumentation()
-        val f = File(inst.targetContext.cacheDir, "commentary-pilot.db")
-        inst.context.assets.open("commentary-pilot.db").use { i -> f.outputStream().use { i.copyTo(it) } }
-        CommentaryDatabase(f)
+        val app = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as BibleApp
+        runBlocking { app.container.commentary() }
     }
 
     @Test fun readsPilotSirach2() {

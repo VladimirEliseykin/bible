@@ -8,8 +8,9 @@ import androidx.test.uiautomator.Until
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.regex.Pattern
 
-/** Проходит главные сценарии: запуск, чтение с прокруткой и листанием глав, оглавление. */
+/** Проходит главные сценарии: запуск, чтение с прокруткой и листанием глав, страница стиха, оглавление. */
 @RunWith(AndroidJUnit4::class)
 class BaselineProfileGenerator {
     @get:Rule val rule = BaselineProfileRule()
@@ -27,6 +28,16 @@ class BaselineProfileGenerator {
         device.waitForIdle()
         pager.swipe(Direction.RIGHT, 0.8f)
         device.waitForIdle()
+        // Страница стиха: открыть, прокрутить, перелистнуть на соседний стих, вернуться к главе.
+        device.findObject(By.res("verse-1"))?.click()
+        if (device.wait(Until.hasObject(By.res(Pattern.compile("verse-list-\\d+"))), 5_000)) {
+            val verse = device.findObject(By.res(Pattern.compile("verse-list-\\d+")))
+            verse.fling(Direction.DOWN)
+            verse.swipe(Direction.LEFT, 0.8f)
+            device.waitForIdle()
+            device.pressBack()
+            device.wait(Until.hasObject(By.res("pager")), 5_000)
+        }
         device.findObject(By.res("chapter-title"))?.click()
         device.wait(Until.hasObject(By.res("toc-sections")), 5_000)
         val toc = device.findObject(By.res("toc-sections"))

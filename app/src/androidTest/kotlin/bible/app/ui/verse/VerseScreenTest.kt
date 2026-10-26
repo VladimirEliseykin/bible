@@ -13,7 +13,6 @@ import androidx.compose.ui.unit.Density
 import androidx.test.platform.app.InstrumentationRegistry
 import bible.app.BibleApp
 import bible.app.ui.theme.BibleTheme
-import java.io.File
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -25,18 +24,6 @@ class VerseScreenTest {
     private val container = (inst.targetContext.applicationContext as BibleApp).container
     private val db = runBlocking { container.database() }
 
-    private fun installPilot() {
-        val dir = File(inst.targetContext.noBackupFilesDir, "commentary").apply { mkdirs() }
-        inst.context.assets.open("commentary-pilot.db").use { i -> File(dir, "commentary.db").outputStream().use { i.copyTo(it) } }
-        File(dir, "commentary.version").writeText("1")
-        container.pack.refresh()
-    }
-
-    private fun removePack() {
-        File(inst.targetContext.noBackupFilesDir, "commentary").deleteRecursively()
-        container.pack.refresh()
-    }
-
     private fun shown(tag: String) = rule.onAllNodes(hasTestTag(tag)).fetchSemanticsNodes().isNotEmpty()
     private fun shownText(t: String) = rule.onAllNodes(hasText(t, substring = true)).fetchSemanticsNodes().isNotEmpty()
 
@@ -46,7 +33,6 @@ class VerseScreenTest {
     }
 
     @Test fun showsPillVerseAndNeighbourLabels() {
-        installPilot()
         open(27002001)
         rule.onNodeWithTag("verse-pill-27002001").assertTextContains("СИРАХ 2:1")
         rule.onNodeWithTag("nav-prev-27002001").assertTextContains("1:30", substring = true)
@@ -55,21 +41,18 @@ class VerseScreenTest {
     }
 
     @Test fun nextLabelOpensNextVerse() {
-        installPilot()
         open(27002001)
         rule.onNodeWithTag("nav-next-27002001").performClick()
         rule.waitUntil(5_000) { shown("verse-glass-27002002") && rule.onAllNodes(hasTestTag("verse-pill-27002002")).fetchSemanticsNodes().isNotEmpty() }
     }
 
     @Test fun firstVerseOfBibleHasNoPrev() {
-        installPilot()
         open(1001001)
         assertTrue(!shown("nav-prev-1001001"))
         assertTrue(shown("nav-next-1001001"))
     }
 
     @Test fun tabsSwitchAndEmptyTabsAreHidden() {
-        installPilot()
         open(27002006) // у стиха 6 нет толкований отцов
         assertTrue(!shown("tab-fathers-27002006"))
         rule.onNodeWithTag("tab-refs-27002006").performClick()
@@ -79,23 +62,13 @@ class VerseScreenTest {
     }
 
     @Test fun bottomBarAppearsAfterScroll() {
-        installPilot()
         open(27002001)
         assertTrue(!shown("verse-bottom-bar-27002001"))
         rule.onNodeWithTag("verse-list-27002001").performScrollToIndex(2)
         rule.waitUntil(5_000) { shown("verse-bottom-bar-27002001") }
     }
 
-    @Test fun packMissingShowsDownloadCardAndSynodalText() {
-        removePack()
-        open(27002001)
-        assertTrue(shown("pack-download-27002001"))
-        assertTrue(shownText("приготовь душу твою к искушению"))
-        installPilot()
-    }
-
     @Test fun verseWithoutNoteSaysItIsComing() {
-        installPilot()
         open(51005003)
         assertTrue(shown("note-missing-51005003"))
         rule.onNodeWithTag("tab-translations-51005003").performClick()
@@ -103,7 +76,6 @@ class VerseScreenTest {
     }
 
     @Test fun longVerseAtDoubleFontDoesNotCoverHeaderButtons() {
-        installPilot()
         rule.setContent {
             val d = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(d.density, fontScale = 2f)) {
@@ -117,7 +89,6 @@ class VerseScreenTest {
     }
 
     @Test fun backReturnsCurrentVerse() {
-        installPilot()
         var back = 0
         open(27002001) { back = it }
         rule.onNodeWithTag("nav-next-27002001").performClick()

@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <!-- Только для однократного скачивания пакета объяснений; чтение работает без сети. -->
-    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:name=".BibleApp"
         android:label="Библия"

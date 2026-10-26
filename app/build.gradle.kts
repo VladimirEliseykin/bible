@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 evaluationDependsOn(":tools:dbgen")
+evaluationDependsOn(":tools:commentary")
 android {
     namespace = "bible.app"
     compileSdk = 36
@@ -87,4 +88,30 @@ val generateBibleDb by tasks.registering(JavaExec::class) {
     args(src.asFile.path, bibleDbDir.get().file("bible.db").asFile.path)
 }
 android.sourceSets["main"].assets.srcDir(bibleDbDir)
-tasks.named("preBuild") { dependsOn(generateBibleDb) }
+
+/** Объяснения стихов и церковнославянский текст: собираются из tools/commentary и лежат в APK. */
+val commentaryDbDir = layout.buildDirectory.dir("generated/commentaryDb")
+val generateCommentaryDb by tasks.registering(JavaExec::class) {
+    val tool = project(":tools:commentary")
+    classpath = tool.extensions.getByType<SourceSetContainer>()["main"].runtimeClasspath
+    mainClass.set("bible.commentary.tool.MainKt")
+    val bibleDb = bibleDbDir.get().file("bible.db")
+    val src = tool.layout.projectDirectory
+    dependsOn(generateBibleDb)
+    inputs.file(bibleDb)
+    inputs.dir(src.dir("notes"))
+    inputs.file(src.file("sources.json"))
+    inputs.file(src.file("sources/CSlElizabeth-CS.json"))
+    inputs.files(classpath)
+    outputs.dir(commentaryDbDir)
+    args(
+        bibleDb.asFile.path,
+        src.dir("notes").asFile.path,
+        src.file("sources.json").asFile.path,
+        src.file("sources/CSlElizabeth-CS.json").asFile.path,
+        commentaryDbDir.get().file("commentary.db").asFile.path,
+        "1",
+    )
+}
+android.sourceSets["main"].assets.srcDir(commentaryDbDir)
+tasks.named("preBuild") { dependsOn(generateBibleDb, generateCommentaryDb) }
