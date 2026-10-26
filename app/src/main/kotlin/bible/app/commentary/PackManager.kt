@@ -47,6 +47,9 @@ class PackManager(
     private fun initial(): PackState =
         marker.takeIf { db.exists() && it.exists() }?.readText()?.toIntOrNull()?.let { PackState.Ready(it) } ?: PackState.Missing
 
+    /** Перечитать состояние с диска (после ручной установки файла или очистки данных). */
+    fun refresh() { _state.value = initial() }
+
     fun installed(): File? = db.takeIf { it.exists() && marker.exists() }
 
     suspend fun download() = withContext(Dispatchers.IO) {
