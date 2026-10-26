@@ -32,6 +32,19 @@ class BibleDatabase(file: File) {
 
     fun close() = db.close()
 
+    /** Номера всех стихов Библии по порядку (≈ 37 тыс., около 150 КБ в памяти). */
+    val verseIds: IntArray by lazy {
+        db.rawQuery("SELECT id FROM verse ORDER BY id", null).use { c ->
+            IntArray(c.count).also { a -> var i = 0; while (c.moveToNext()) a[i++] = c.getInt(0) }
+        }
+    }
+
+    /** Один стих по номеру. */
+    fun verse(id: Int): Verse? =
+        db.rawQuery("SELECT id, verse, text FROM verse WHERE id = ?", arrayOf(id.toString())).use { c ->
+            if (c.moveToFirst()) Verse(c.getInt(0), c.getInt(1), c.getString(2)) else null
+        }
+
     suspend fun chapter(ref: ChapterRef): List<Verse> = withContext(Dispatchers.IO) {
         db.rawQuery(
             "SELECT id, verse, text FROM verse WHERE book_id = ? AND chapter = ? ORDER BY verse",
