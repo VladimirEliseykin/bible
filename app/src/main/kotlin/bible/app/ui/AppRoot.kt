@@ -1,5 +1,13 @@
 package bible.app.ui
 
+import bible.app.ui.verse.VerseScreen
+import bible.app.data.ReadingPosition
+import bible.app.data.ChapterRef
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
 import bible.app.ui.common.TabItem
 import bible.app.ui.common.bottomTabsSpace
 import dev.chrisbanes.haze.HazeState
@@ -58,6 +66,8 @@ object Routes {
     const val HOME = "home"
     const val BIBLE = "bible"
     const val TOC = "toc"
+    const val VERSE = "verse/{id}"
+    fun verse(id: Int) = "verse/$id"
 }
 
 @Composable
@@ -111,7 +121,7 @@ private fun Tabs(container: AppContainer, db: BibleDatabase) {
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route
     var reading by remember { mutableStateOf(false) }
-    val tabsVisible = !(route == Routes.BIBLE && reading)
+    val tabsVisible = !(route == Routes.BIBLE && reading) && route != Routes.VERSE
     val tabsSpace = bottomTabsSpace()
     val hazeState = remember { HazeState() }
 
@@ -124,7 +134,27 @@ private fun Tabs(container: AppContainer, db: BibleDatabase) {
             }
             composable(Routes.BIBLE) {
                 Box(Modifier.fillMaxSize().testTag("screen-reader")) {
-                    ReaderScreen(db, container.store, onImmersiveChange = { reading = it }) { nav.navigate(Routes.TOC) }
+                    ReaderScreen(
+                        db,
+                        container.store,
+                        onImmersiveChange = { reading = it },
+                        onOpenVerse = { nav.navigate(Routes.verse(it)) },
+                    ) { nav.navigate(Routes.TOC) }
+                }
+            }
+            composable(Routes.VERSE, arguments = listOf(navArgument("id") { type = NavType.IntType })) { entry ->
+                val start = entry.arguments!!.getInt("id")
+                val scope = rememberCoroutineScope()
+                // Вернуться к чтению на стихе, где остановились (или куда ведёт ссылка).
+                // Навигация только с главного потока: после suspend-записи DataStore продолжение может прийти не туда.
+                val goTo: (Int) -> Unit = { id ->
+                    scope.launch(Dispatchers.Main.immediate) {
+                        container.store.savePosition(ReadingPosition(ChapterRef(id / 1_000_000, id / 1_000 % 1_000), id % 1_000))
+                        nav.navigate(Routes.BIBLE) { popUpTo(Routes.BIBLE) { inclusive = true } }
+                    }
+                }
+                Box(Modifier.fillMaxSize().testTag("screen-verse")) {
+                    VerseScreen(db, container, start, onBack = goTo, onOpenRef = goTo)
                 }
             }
             composable(Routes.TOC) {

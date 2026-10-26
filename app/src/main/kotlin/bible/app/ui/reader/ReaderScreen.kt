@@ -83,15 +83,22 @@ fun ReaderScreen(
     db: BibleDatabase,
     store: ReadingStore,
     onImmersiveChange: (Boolean) -> Unit = {},
+    onOpenVerse: (verseId: Int) -> Unit = {},
     onOpenToc: () -> Unit,
 ) {
     val vm: ReaderViewModel = viewModel(factory = viewModelFactory { initializer { ReaderViewModel(db, store) } })
     val start by vm.start.collectAsState()
-    start?.let { Reader(vm, it, onImmersiveChange, onOpenToc) }
+    start?.let { Reader(vm, it, onImmersiveChange, onOpenVerse, onOpenToc) }
 }
 
 @Composable
-private fun Reader(vm: ReaderViewModel, begin: ReadingPosition, onImmersiveChange: (Boolean) -> Unit, onOpenToc: () -> Unit) {
+private fun Reader(
+    vm: ReaderViewModel,
+    begin: ReadingPosition,
+    onImmersiveChange: (Boolean) -> Unit,
+    onOpenVerse: (Int) -> Unit,
+    onOpenToc: () -> Unit,
+) {
     val nav = vm.navigator
     val pager = rememberPagerState(initialPage = nav.indexOf(begin.ref)) { nav.totalChapters }
     val scope = rememberCoroutineScope()
@@ -154,6 +161,7 @@ private fun Reader(vm: ReaderViewModel, begin: ReadingPosition, onImmersiveChang
                 onArtVisibleChanged = { artVisible = it },
                 onAtEndChanged = { atEnd = it },
                 onSettled = { verse -> vm.onPositionSettled(ref, verse) },
+                onVerseClick = onOpenVerse,
             )
         }
 
