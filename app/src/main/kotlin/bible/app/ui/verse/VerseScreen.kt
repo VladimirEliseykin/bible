@@ -43,7 +43,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -60,8 +62,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -79,6 +79,7 @@ import bible.app.ui.common.GoldPill
 import bible.app.ui.theme.BibleColors
 import bible.app.ui.theme.Literata
 import bible.app.ui.theme.StatusBarIcons
+import bible.commentary.model.Link
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -92,7 +93,6 @@ private val Cream = Color(0xFFFBF6EC)
 private val Gold2 = Color(0xFF8A6A2C)
 private val GoldLight = Color(0xFFF1DFB4)
 private val GlassDark = Color(0xFF12141A)
-private val Ponomar = FontFamily(Font(R.font.ponomar))
 
 private val GlassStyle = HazeStyle(
     backgroundColor = GlassDark,
@@ -118,7 +118,9 @@ fun VerseScreen(
     val pager = rememberPagerState(initialPage = nav.indexOf(startVerseId)) { nav.size }
     val scope = rememberCoroutineScope()
     val current by remember { derivedStateOf { nav.idAt(pager.currentPage) } }
-    StatusBarIcons(dark = false)
+    // Иконки тёмные, когда акварель текущей страницы ушла из-под строки состояния (там светлый фон), иначе светлые.
+    val pastArt = remember { mutableStateMapOf<Int, Boolean>() }
+    StatusBarIcons(dark = pastArt[current] == true)
     BackHandler { onBack(current) }
 
     HorizontalPager(pager, Modifier.fillMaxSize().background(BibleColors.Background), key = { nav.idAt(it) }, beyondViewportPageCount = 1) { page ->
@@ -135,6 +137,7 @@ fun VerseScreen(
             onNext = { scope.launch { pager.animateScrollToPage(page + 1) } },
             onBack = { onBack(id) },
             onOpenRef = onOpenRef,
+            onPastArt = { pastArt[id] = it },
         )
     }
 }
@@ -149,11 +152,15 @@ private fun VersePage(
     onNext: () -> Unit,
     onBack: () -> Unit,
     onOpenRef: (Int) -> Unit,
+    onPastArt: (Boolean) -> Unit,
 ) {
     val list = rememberLazyListState()
+    val stuck by remember { derivedStateOf { list.firstVisibleItemIndex >= 2 } }
+    val pastArt by remember { derivedStateOf { list.firstVisibleItemIndex >= 1 } }
+    LaunchedEffect(pastArt) { onPastArt(pastArt) }
     val tabs = remember(d) { d.tabs() }
-    var tab by rememberSaveable(d.id) { mutableStateOf(tabs.first()) }
-    if (tab !in tabs) tab = tabs.first()
+    var tab by rememberSaveable(d.id) { mutableStateOf(tabs.firstOrNull() ?: VerseTab.Meaning) }
+    if (tabs.isNotEmpty() && tab !in tabs) tab = tabs.first()
     // Плашка нужна, когда стрелки в шапке ушли из вида: шапка почти целиком прокручена.
     val density = LocalDensity.current
     val showBar by remember {
@@ -174,18 +181,19 @@ private fun VersePage(
                     else -> Lead(d.note.lead)
                 }
             }
-            stickyHeader(key = "tabs") { Tabs(d.id, tabs, tab) { tab = it } }
-            item(key = "content-${tab.name}") {
-                Column(Modifier.fillMaxWidth().heightIn(min = minContent).padding(horizontal = 18.dp, vertical = 14.dp)) {
-                    when (tab) {
-                        VerseTab.Meaning -> d.note?.meaning.orEmpty().forEachIndexed { i, it -> Point(it.title, it.text, last = i == d.note!!.meaning.lastIndex) }
-                        VerseTab.Context -> d.context.forEachIndexed { i, it -> Point(it.title, it.text, last = i == d.context.lastIndex) }
-                        VerseTab.Refs -> d.refs.forEach { RefCard(it) { onOpenRef(it.verseId) } }
-                        VerseTab.Translations -> {
-                            Point("Синодальный перевод", d.synodal, serif = true, last = d.csl == null)
-                            d.csl?.let { Point("Церковнославянский", it, family = Ponomar, last = true) }
+            if (tabs.isNotEmpty()) {
+                stickyHeader(key = "tabs") { Tabs(d.id, tabs, tab, stuck) { tab = it } }
+                item(key = "content-${tab.name}") {
+                    Column(Modifier.fillMaxWidth().heightIn(min = minContent).padding(horizontal = 18.dp, vertical = 14.dp)) {
+                        when (tab) {
+                            VerseTab.Meaning -> Points(d.meaning, onOpenRef)
+                            VerseTab.Context -> Points(d.context, onOpenRef)
+                            VerseTab.Fathers -> d.fathers.forEachIndexed { i, f ->
+                                FatherPoint(f.author, f.where, f.quote, f.url.ifEmpty { d.sourceUrls[f.source] }, last = i == d.fathers.lastIndex)
+                            }
+                            VerseTab.Life -> Points(d.life, onOpenRef)
+                            VerseTab.Links -> d.links.forEach { LinkCard(it) }
                         }
-                        VerseTab.Fathers -> d.fathers.forEachIndexed { i, f -> FatherPoint(f.author, f.quote, d.sourceUrls[f.source], last = i == d.fathers.lastIndex) }
                     }
                 }
             }
@@ -306,9 +314,10 @@ private fun NoteMissing(id: Int) {
     }
 }
 
+/** [stuck] – вкладки прилипли к верху экрана: отступаем под строку состояния, чтобы она их не закрывала. */
 @Composable
-private fun Tabs(id: Int, tabs: List<VerseTab>, selected: VerseTab, onSelect: (VerseTab) -> Unit) {
-    Column(Modifier.fillMaxWidth().background(BibleColors.Background)) {
+private fun Tabs(id: Int, tabs: List<VerseTab>, selected: VerseTab, stuck: Boolean, onSelect: (VerseTab) -> Unit) {
+    Column(Modifier.fillMaxWidth().background(BibleColors.Background).then(if (stuck) Modifier.statusBarsPadding() else Modifier)) {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp)) {
             tabs.forEach { t ->
                 val on = t == selected
@@ -330,25 +339,28 @@ private fun Tabs(id: Int, tabs: List<VerseTab>, selected: VerseTab, onSelect: (V
 }
 
 @Composable
-private fun Point(title: String, text: String, last: Boolean, serif: Boolean = false, family: FontFamily? = null) {
+private fun Points(points: List<PointView>, onOpenRef: (Int) -> Unit) {
+    points.forEachIndexed { i, p -> Point(p, onOpenRef, last = i == points.lastIndex) }
+}
+
+/** Пункт: золотая точка, заголовок, текст и карточки мест Библии, о которых он говорит. */
+@Composable
+private fun Point(p: PointView, onOpenRef: (Int) -> Unit, last: Boolean) {
     Column(Modifier.fillMaxWidth().padding(bottom = if (last) 0.dp else 14.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(6.dp).clip(CircleShape).background(BibleColors.Gold))
-            Text(title, Modifier.padding(start = 8.dp), fontFamily = Literata, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = BibleColors.Ink)
+            Text(p.title, Modifier.padding(start = 8.dp), fontFamily = Literata, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = BibleColors.Ink)
         }
-        Text(
-            text, Modifier.padding(start = 14.dp, top = 4.dp),
-            fontFamily = family ?: if (serif) Literata else null,
-            fontSize = if (family != null) 18.sp else 15.sp,
-            lineHeight = if (family != null) 28.sp else 24.sp,
-            color = BibleColors.Ink,
-        )
-        if (!last) HorizontalDivider(Modifier.padding(start = 14.dp, top = 14.dp), thickness = 1.dp, color = BibleColors.Line)
+        Text(p.text, Modifier.padding(start = 14.dp, top = 4.dp), fontSize = 15.sp, lineHeight = 24.sp, color = BibleColors.Ink)
+        if (p.refs.isNotEmpty()) {
+            Column(Modifier.padding(start = 14.dp, top = 10.dp)) { p.refs.forEach { r -> RefCard(r) { onOpenRef(r.verseId) } } }
+        }
+        if (!last) HorizontalDivider(Modifier.padding(start = 14.dp, top = if (p.refs.isEmpty()) 14.dp else 6.dp), thickness = 1.dp, color = BibleColors.Line)
     }
 }
 
 @Composable
-private fun FatherPoint(author: String, quote: String, url: String?, last: Boolean) {
+private fun FatherPoint(author: String, where: String, quote: String, url: String?, last: Boolean) {
     val uri = LocalUriHandler.current
     var open by rememberSaveable(quote) { mutableStateOf(false) }
     val long = quote.length > 170
@@ -357,6 +369,7 @@ private fun FatherPoint(author: String, quote: String, url: String?, last: Boole
             Box(Modifier.size(6.dp).clip(CircleShape).background(BibleColors.Gold))
             Text(author, Modifier.padding(start = 8.dp), fontFamily = Literata, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = BibleColors.Ink)
         }
+        if (where.isNotEmpty()) Text(where, Modifier.padding(start = 14.dp, top = 2.dp), fontSize = 13.sp, color = BibleColors.Muted)
         Text(
             "«$quote»", Modifier.padding(start = 14.dp, top = 4.dp),
             fontFamily = Literata, fontSize = 15.sp, lineHeight = 24.sp, color = BibleColors.Ink,
@@ -383,6 +396,22 @@ private fun RefCard(ref: RefView, onClick: () -> Unit) {
             Text(ref.text, Modifier.padding(top = 3.dp), fontFamily = Literata, fontSize = 15.sp, lineHeight = 23.sp, color = BibleColors.Ink)
         }
         Text("›", Modifier.padding(start = 8.dp), fontSize = 20.sp, color = BibleColors.Muted)
+    }
+}
+
+/** Статья о стихе или главе: открывается в браузере. */
+@Composable
+private fun LinkCard(link: Link) {
+    val uri = LocalUriHandler.current
+    Row(
+        Modifier.fillMaxWidth().padding(bottom = 8.dp).clip(RoundedCornerShape(14.dp)).background(BibleColors.Tab).clickable { uri.openUri(link.url) }.padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(link.site, color = Gold2, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            Text(link.title, Modifier.padding(top = 3.dp), fontFamily = Literata, fontSize = 15.sp, lineHeight = 22.sp, color = BibleColors.Ink)
+        }
+        Text("↗", Modifier.padding(start = 8.dp), fontSize = 16.sp, color = BibleColors.Muted)
     }
 }
 

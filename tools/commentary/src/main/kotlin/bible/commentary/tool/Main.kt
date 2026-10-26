@@ -1,37 +1,19 @@
 package bible.commentary.tool
 
-import bible.commentary.model.ChapterFile
 import bible.commentary.model.ChapterNote
-import bible.commentary.model.Json
 import bible.commentary.model.VerseNote
 import java.io.File
-import java.sql.DriverManager
 import kotlin.system.exitProcess
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.Serializable
 
-@Serializable private data class SourceJson(val id: String, val title: String, val author: String, val url: String, val license: String)
-
-/** Аргументы: bible.db, каталог notes, sources.json, CSlElizabeth-CS.json, путь к commentary.db, версия данных. */
+/** Аргументы: bible.db, каталог notes, sources.json, путь к commentary.db, версия данных. */
 fun main(args: Array<String>) {
-    require(args.size == 6) { "usage: commentary <bible.db> <notesDir> <sources.json> <csl.json> <out.db> <version>" }
-    val (bibleDb, notesDir, sourcesFile, cslFile, db) = args.take(5).map(::File)
-    val version = args[5].toInt()
+    require(args.size == 5) { "usage: commentary <bible.db> <notesDir> <sources.json> <out.db> <version>" }
+    val (bibleDb, notesDir, sourcesFile, db) = args.take(4).map(::File)
+    val version = args[4].toInt()
 
-    val verseIds = HashSet<Int>()
-    val bookIds = HashMap<String, Int>()
-    val bookChapters = HashMap<Int, Int>()
-    DriverManager.getConnection("jdbc:sqlite:${bibleDb.path}").use { c ->
-        c.createStatement().use { s ->
-            s.executeQuery("SELECT id FROM verse").use { r -> while (r.next()) verseIds += r.getInt(1) }
-            s.executeQuery("SELECT id, abbr, chapters FROM book").use { r -> while (r.next()) { bookIds[r.getString(2)] = r.getInt(1); bookChapters[r.getInt(1)] = r.getInt(3) } }
-        }
-    }
-    val sources = Json.decodeFromString(ListSerializer(SourceJson.serializer()), sourcesFile.readText())
-    val files = notesDir.walkTopDown().filter { it.isFile && it.extension == "json" }.sorted()
-        .map { Json.decodeFromString(ChapterFile.serializer(), it.readText()) }.toList()
-
-    val errors = validate(files, verseIds, bookIds, sources.map { it.id }.toSet())
+    val inputs = Inputs(bibleDb, notesDir, sourcesFile)
+    val (files, bookIds, sources) = Triple(inputs.files, inputs.bookIds, inputs.sources)
+    val errors = inputs.errors()
     if (errors.isNotEmpty()) {
         errors.forEach { System.err.println(it) }
         exitProcess(1)
@@ -41,11 +23,10 @@ fun main(args: Array<String>) {
     val chapters = HashMap<Pair<Int, Int>, ChapterNote>()
     for (f in files) {
         val book = bookIds.getValue(f.book)
-        if (f.chapter_note.context.isNotEmpty()) chapters[book to f.chapter] = f.chapter_note
+        if (f.chapter_note != ChapterNote()) chapters[book to f.chapter] = f.chapter_note
         f.verses.forEach { (n, note) -> notes[book * 1_000_000 + f.chapter * 1_000 + n.toInt()] = note }
     }
-    val csl = loadCsl(cslFile, bookChapters, verseIds)
 
-    writePack(db, notes, chapters, csl, sources.map { Source(it.id, it.title, it.author, it.url, it.license) }, version)
-    println("commentary: ${notes.size} стихов, ${chapters.size} глав, ${csl.size} стихов ЦС, ${db.length() / 1024} КБ → $db")
+    writePack(db, notes, chapters, sources.map { Source(it.id, it.title, it.author, it.url, it.license) }, version)
+    println("commentary: ${notes.size} стихов, ${chapters.size} глав, ${db.length() / 1024} КБ → $db")
 }

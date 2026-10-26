@@ -14,6 +14,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import bible.app.BibleApp
 import bible.app.ui.theme.BibleTheme
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -23,6 +24,8 @@ class VerseScreenTest {
     private val inst = InstrumentationRegistry.getInstrumentation()
     private val container = (inst.targetContext.applicationContext as BibleApp).container
     private val db = runBlocking { container.database() }
+    private val books = db.books.associateBy { it.id }
+    private fun data(id: Int) = runBlocking { loadVerse(db, books, container.commentary(), id) }
 
     private fun shown(tag: String) = rule.onAllNodes(hasTestTag(tag)).fetchSemanticsNodes().isNotEmpty()
     private fun shownText(t: String) = rule.onAllNodes(hasText(t, substring = true)).fetchSemanticsNodes().isNotEmpty()
@@ -37,7 +40,7 @@ class VerseScreenTest {
         rule.onNodeWithTag("verse-pill-27002001").assertTextContains("СИРАХ 2:1")
         rule.onNodeWithTag("nav-prev-27002001").assertTextContains("1:30", substring = true)
         rule.onNodeWithTag("nav-next-27002001").assertTextContains("2:2", substring = true)
-        assertTrue(shownText("Кто решил жить с Богом"))
+        assertTrue(shownText(data(27002001).note!!.lead.take(30)))
     }
 
     @Test fun nextLabelOpensNextVerse() {
@@ -52,13 +55,15 @@ class VerseScreenTest {
         assertTrue(shown("nav-next-1001001"))
     }
 
-    @Test fun tabsSwitchAndEmptyTabsAreHidden() {
-        open(27002006) // у стиха 6 нет толкований отцов
-        assertTrue(!shown("tab-fathers-27002006"))
-        rule.onNodeWithTag("tab-refs-27002006").performClick()
-        rule.waitUntil(5_000) { shownText("Предай Господу путь твой") }
-        rule.onNodeWithTag("tab-translations-27002006").performClick()
-        rule.waitUntil(5_000) { shownText("Вѣ́рꙋй є҆мꙋ̀") }
+    @Test fun tabsMatchDataAndSwitch() {
+        val d = data(27002001)
+        val tabs = d.tabs()
+        assertTrue("у пилотного стиха есть смысл и толкования", VerseTab.Meaning in tabs && VerseTab.Fathers in tabs)
+        open(27002001)
+        VerseTab.entries.forEach { t -> assertEquals(t.name, t in tabs, shown("tab-${t.tag}-27002001")) }
+        assertTrue(shownText(d.meaning.first().title))
+        rule.onNodeWithTag("tab-fathers-27002001").performClick()
+        rule.waitUntil(5_000) { shownText(d.fathers.first().author) }
     }
 
     @Test fun bottomBarAppearsAfterScroll() {
@@ -68,11 +73,10 @@ class VerseScreenTest {
         rule.waitUntil(5_000) { shown("verse-bottom-bar-27002001") }
     }
 
-    @Test fun verseWithoutNoteSaysItIsComing() {
-        open(51005003)
-        assertTrue(shown("note-missing-51005003"))
-        rule.onNodeWithTag("tab-translations-51005003").performClick()
-        rule.waitUntil(5_000) { shownText("бл҃же́ни") }
+    @Test fun verseWithoutNoteSaysItIsComingAndHasNoTabs() {
+        open(1001001)
+        assertTrue(shown("note-missing-1001001"))
+        VerseTab.entries.forEach { assertTrue(!shown("tab-${it.tag}-1001001")) }
     }
 
     @Test fun longVerseAtDoubleFontDoesNotCoverHeaderButtons() {

@@ -6,10 +6,11 @@ import org.junit.Test
 class ModelTest {
     private val note = VerseNote(
         lead = "Кратко – о главном.",
-        meaning = listOf(Item("«искушение»", "испытание")),
-        context = listOf(Item("Кто и когда", "Иисус, сын Сирахов")),
-        refs = listOf(Ref(56001002, 56001003)),
-        fathers = listOf(Father("А. П. Лопухин", "«Решившийся…»", "lopukhin")),
+        meaning = listOf(Item("«искушение»", "испытание", refs = listOf(Ref(56001002, 56001003)), src = listOf("lopukhin"))),
+        context = listOf(Item("Кто и когда", "Иисус, сын Сирахов", src = listOf("lopukhin"))),
+        fathers = listOf(Father("А. П. Лопухин", "«Решившийся…»", "lopukhin", where = "Сир 2", url = "https://azbyka.ru/x")),
+        life = listOf(Item("Не бояться трудностей", "…", src = listOf("lopukhin"))),
+        links = listOf(Link("Статья", "https://azbyka.ru/y", "Азбука веры")),
     )
 
     @Test fun roundTrip() = assertEquals(note, decodeNote(encodeNote(note)))

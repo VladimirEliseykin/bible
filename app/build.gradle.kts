@@ -89,7 +89,7 @@ val generateBibleDb by tasks.registering(JavaExec::class) {
 }
 android.sourceSets["main"].assets.srcDir(bibleDbDir)
 
-/** Объяснения стихов и церковнославянский текст: собираются из tools/commentary и лежат в APK. */
+/** Объяснения стихов: собираются из tools/commentary и лежат в APK. */
 val commentaryDbDir = layout.buildDirectory.dir("generated/commentaryDb")
 val generateCommentaryDb by tasks.registering(JavaExec::class) {
     val tool = project(":tools:commentary")
@@ -101,14 +101,12 @@ val generateCommentaryDb by tasks.registering(JavaExec::class) {
     inputs.file(bibleDb)
     inputs.dir(src.dir("notes"))
     inputs.file(src.file("sources.json"))
-    inputs.file(src.file("sources/CSlElizabeth-CS.json"))
     inputs.files(classpath)
     outputs.dir(commentaryDbDir)
     args(
         bibleDb.asFile.path,
         src.dir("notes").asFile.path,
         src.file("sources.json").asFile.path,
-        src.file("sources/CSlElizabeth-CS.json").asFile.path,
         commentaryDbDir.get().file("commentary.db").asFile.path,
         "1",
     )

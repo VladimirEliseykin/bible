@@ -6,10 +6,14 @@ import bible.app.data.Book
 import bible.app.domain.VerseNavigator
 import bible.commentary.model.Father
 import bible.commentary.model.Item
+import bible.commentary.model.Link
 import bible.commentary.model.VerseNote
 
 /** Ссылка, готовая к показу: «Иакова 1:2–3» и текст стихов. */
 data class RefView(val verseId: Int, val label: String, val text: String)
+
+/** Пункт раздела с местами Библии, о которых он говорит. */
+data class PointView(val title: String, val text: String, val refs: List<RefView>)
 
 /** Всё, что показывает страница одного стиха. */
 data class VerseData(
@@ -17,26 +21,26 @@ data class VerseData(
     val book: Book,
     val text: String,
     val note: VerseNote?,
-    val context: List<Item>,
-    val refs: List<RefView>,
-    val synodal: String,
-    val csl: String?,
+    val meaning: List<PointView>,
+    val context: List<PointView>,
     val fathers: List<Father>,
+    val life: List<PointView>,
+    val links: List<Link>,
     val sourceUrls: Map<String, String>,
 )
 
 enum class VerseTab(val title: String, val tag: String) {
-    Meaning("Смысл", "meaning"), Context("Контекст", "context"), Refs("Ссылки", "refs"),
-    Translations("Переводы", "translations"), Fathers("Отцы", "fathers"),
+    Meaning("Смысл", "meaning"), Context("Контекст", "context"), Fathers("Толкования", "fathers"),
+    Life("Для жизни", "life"), Links("Ссылки", "links"),
 }
 
-/** Вкладки, в которых есть что показать; «Переводы» есть всегда. */
+/** Вкладки, в которых есть что показать. */
 fun VerseData.tabs(): List<VerseTab> = buildList {
-    if (!note?.meaning.isNullOrEmpty()) add(VerseTab.Meaning)
+    if (meaning.isNotEmpty()) add(VerseTab.Meaning)
     if (context.isNotEmpty()) add(VerseTab.Context)
-    if (refs.isNotEmpty()) add(VerseTab.Refs)
-    add(VerseTab.Translations)
     if (fathers.isNotEmpty()) add(VerseTab.Fathers)
+    if (life.isNotEmpty()) add(VerseTab.Life)
+    if (links.isNotEmpty()) add(VerseTab.Links)
 }
 
 fun refLabel(books: Map<Int, Book>, from: Int, to: Int?): String {
@@ -48,24 +52,24 @@ fun refLabel(books: Map<Int, Book>, from: Int, to: Int?): String {
 
 fun loadVerse(db: BibleDatabase, books: Map<Int, Book>, commentary: CommentaryDatabase, id: Int): VerseData {
     val book = books.getValue(VerseNavigator.book(id))
-    val text = db.verse(id)?.text.orEmpty()
     val note = commentary.note(id)
-    val chapterContext = commentary.chapter(book.id, VerseNavigator.chapter(id))?.context.orEmpty()
-    val refs = note?.refs.orEmpty().map { r ->
-        val ids = if (r.to == null) listOf(r.verse_id) else db.verseIds.filter { it in r.verse_id..r.to!! }
-        RefView(r.verse_id, refLabel(books, r.verse_id, r.to), ids.mapNotNull { db.verse(it)?.text }.joinToString(" "))
-    }
+    val chapter = commentary.chapter(book.id, VerseNavigator.chapter(id))
+    fun point(it: Item) = PointView(it.title, it.text, it.refs.map { r ->
+        val end = r.to
+        val ids = if (end == null) listOf(r.verse_id) else db.verseIds.filter { v -> v in r.verse_id..end }
+        RefView(r.verse_id, refLabel(books, r.verse_id, end), ids.mapNotNull { v -> db.verse(v)?.text }.joinToString(" "))
+    })
     val fathers = note?.fathers.orEmpty()
     return VerseData(
         id = id,
         book = book,
-        text = text,
+        text = db.verse(id)?.text.orEmpty(),
         note = note,
-        context = note?.context.orEmpty() + chapterContext,
-        refs = refs,
-        synodal = text,
-        csl = commentary.translation(id, "csl"),
+        meaning = note?.meaning.orEmpty().map(::point),
+        context = (note?.context.orEmpty() + chapter?.context.orEmpty()).map(::point),
         fathers = fathers,
+        life = note?.life.orEmpty().map(::point),
+        links = (note?.links.orEmpty() + chapter?.links.orEmpty()).distinctBy { it.url },
         sourceUrls = fathers.map { it.source }.distinct().mapNotNull { s -> commentary.sourceUrl(s)?.let { s to it } }.toMap(),
     )
 }

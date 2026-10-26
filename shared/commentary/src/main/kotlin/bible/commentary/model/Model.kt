@@ -9,14 +9,22 @@ import kotlinx.serialization.json.Json as KJson
 /** Формат JSON объяснений: неизвестные поля пропускаются, чтобы старое приложение читало новый пакет. */
 val Json: KJson = KJson { ignoreUnknownKeys = true; encodeDefaults = false }
 
-/** Пункт раздела «Смысл» или «Контекст»: заголовок с засечками и текст под ним. */
-@Serializable data class Item(val title: String, val text: String)
+/**
+ * Пункт раздела «Смысл», «Контекст» или «Для жизни»: заголовок с засечками и текст под ним.
+ * [refs] – места Библии, о которых говорит пункт (карточки под ним); [src] – id источников, на которых он основан.
+ */
+@Serializable
+data class Item(val title: String, val text: String, val refs: List<Ref> = emptyList(), val src: List<String> = emptyList())
 
 /** Ссылка на другое место Библии: стих или диапазон стихов (`to` включительно). */
 @Serializable data class Ref(val verse_id: Int, val to: Int? = null)
 
-/** Толкование: дословная цитата, автор и источник (id из таблицы `source`). */
-@Serializable data class Father(val author: String, val quote: String, val source: String)
+/** Толкование: дословная цитата, автор, источник (id из таблицы `source`), место в сочинении и адрес страницы. */
+@Serializable
+data class Father(val author: String, val quote: String, val source: String, val where: String = "", val url: String = "")
+
+/** Статья или материал в интернете о стихе или главе: открывается в браузере. */
+@Serializable data class Link(val title: String, val url: String, val site: String)
 
 /** Объяснение одного стиха. */
 @Serializable
@@ -24,12 +32,13 @@ data class VerseNote(
     val lead: String = "",
     val meaning: List<Item> = emptyList(),
     val context: List<Item> = emptyList(),
-    val refs: List<Ref> = emptyList(),
     val fathers: List<Father> = emptyList(),
+    val life: List<Item> = emptyList(),
+    val links: List<Link> = emptyList(),
 )
 
-/** Общее для главы: пункты «Контекст», если у стиха своих нет. */
-@Serializable data class ChapterNote(val context: List<Item> = emptyList())
+/** Общее для главы: пункты «Контекст» и ссылки на материалы о главе – показываются у каждого её стиха. */
+@Serializable data class ChapterNote(val context: List<Item> = emptyList(), val links: List<Link> = emptyList())
 
 /** Входной файл главы для сборщика пакета: ключ `verses` — номер стиха строкой. */
 @Serializable

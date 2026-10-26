@@ -4,7 +4,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import bible.app.BibleApp
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -18,14 +17,18 @@ class CommentaryDatabaseTest {
         runBlocking { app.container.commentary() }
     }
 
-    @Test fun readsPilotSirach2() {
-        val n = db.note(27002001)!!
-        assertTrue(n.lead.startsWith("Кто решил жить с Богом"))
-        assertEquals(56001002, n.refs.first().verse_id)
-        assertEquals("Кто и когда", db.chapter(27, 2)!!.context.first().title)
+    @Test fun everyPilotVerseHasLeadAndMeaning() {
+        val ids = (27002001..27002018) + (51005001..51005012)
+        ids.forEach { id ->
+            val n = db.note(id)
+            assertTrue("$id", n != null && n.lead.isNotBlank() && n.meaning.isNotEmpty())
+        }
     }
 
-    @Test fun churchSlavonicTranslation() = assertTrue(db.translation(27002001, "csl")!!.startsWith("Ча́до"))
+    @Test fun chapterNoteAndSources() {
+        assertTrue(db.chapter(51, 5)!!.context.isNotEmpty())
+        assertTrue(db.sourceUrl("lopukhin")!!.startsWith("https://"))
+    }
 
-    @Test fun missingVerseNoteIsNull() = assertNull(db.note(51005003))
+    @Test fun missingVerseNoteIsNull() = assertNull(db.note(1001001))
 }

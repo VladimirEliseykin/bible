@@ -23,11 +23,6 @@ class CommentaryDatabase(file: File) {
             if (c.moveToFirst()) decodeChapter(c.getBlob(0)) else null
         }
 
-    fun translation(verseId: Int, code: String): String? =
-        db.rawQuery("SELECT text FROM translation WHERE verse_id=? AND code=?", arrayOf(verseId.toString(), code)).use { c ->
-            if (c.moveToFirst()) c.getString(0) else null
-        }
-
     /** Адреса источников для ссылки «↗» под толкованием. */
     fun sourceUrl(id: String): String? =
         db.rawQuery("SELECT url FROM source WHERE id=?", arrayOf(id)).use { c -> if (c.moveToFirst()) c.getString(0) else null }
