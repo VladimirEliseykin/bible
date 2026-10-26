@@ -1,5 +1,6 @@
 package bible.app.ui.reader
 
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -79,5 +80,10 @@ class ReaderScreenTest {
         rule.waitUntil(5_000) { rule.onAllNodes(hasTestTag("verse-150")).fetchSemanticsNodes().isNotEmpty() }
         Thread.sleep(800)
         assertEquals(150, runBlocking { container.store.position.first()!!.verse })
+    }
+
+    @Test fun chapterBarShowsGoldPillTitle() {
+        open(ChapterRef(51, 5))
+        rule.onNodeWithTag("chapter-bar-title").assertTextEquals("ОТ МАТФЕЯ 5")
     }
 }

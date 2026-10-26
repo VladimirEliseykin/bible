@@ -67,6 +67,7 @@ import bible.app.data.ReadingStore
 import bible.app.data.TEXT_SIZES_SP
 import bible.app.ui.common.bottomTabsTop
 import bible.app.ui.common.Chip
+import bible.app.ui.common.GoldPill
 import bible.app.ui.theme.BibleColors
 import bible.app.ui.theme.StatusBarIcons
 import kotlinx.coroutines.launch
@@ -200,16 +201,9 @@ private fun Reader(vm: ReaderViewModel, begin: ReadingPosition, onImmersiveChang
                     NavArrow("‹", "prev-chapter", enabled = nav.indexOf(current) > 0) {
                         scope.launch { pager.animateScrollToPage(pager.currentPage - 1) }
                     }
-                    Text(
-                        "${currentBook.shortTitle} ${current.chapter}",
-                        Modifier.weight(1f).padding(horizontal = 8.dp),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                        color = BibleColors.Ink,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    Box(Modifier.weight(1f).padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
+                        GoldPill("${currentBook.shortTitle} ${current.chapter}", Modifier.testTag("chapter-bar-title"))
+                    }
                     NavArrow("›", "next-chapter", enabled = nav.indexOf(current) < nav.totalChapters - 1) {
                         scope.launch { pager.animateScrollToPage(pager.currentPage + 1) }
                     }
