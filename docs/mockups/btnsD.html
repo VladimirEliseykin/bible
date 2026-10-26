@@ -1,0 +1,106 @@
+<title>Подписи стихов</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Golos+Text:wght@400;500;600&display=swap">
+<style>
+/* Layout: сетка «вариант × картинка» — каждый способ подачи стиха проверяется на светлой, розовой, тёмной и пёстрой акварели */
+:root{
+  --page:#e8ebee; --ink:#1f242c; --ink2:#3a414c; --muted:#6b7482; --gold:#b08a3e; --gold2:#8a6a2c; --cream:#fbf6ec; --line:#ebe5d8;
+  --serif:"Literata", Georgia, serif; --ui:"Golos Text", system-ui, sans-serif;
+  color-scheme:light;
+}
+body{background:var(--page);color:var(--ink);font-family:var(--ui);padding:32px 16px 48px}
+header{max-width:1400px;margin:0 auto 22px}
+h1{font-family:var(--serif);font-weight:600;font-size:2.1rem;margin:0 0 8px}
+header p{margin:0;color:var(--muted);max-width:80ch;line-height:1.5}
+.row{max-width:1400px;margin:0 auto 34px}
+.row h2{font-size:1.05rem;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.row h2 b{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;font-size:.8rem}
+.row>p{margin:0 0 12px;color:var(--muted);font-size:.88rem;line-height:1.45;max-width:80ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.ph{position:relative;border-radius:26px;overflow:hidden;background:#fff;border:6px solid #12161c;box-shadow:0 14px 30px -16px rgba(20,30,45,.4)}
+.ref{font-size:.68rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase}
+.verse{font-family:var(--serif);font-size:1rem;line-height:1.5;margin:5px 0 0}
+.lead{background:var(--cream);padding:12px 16px 10px;text-align:center}
+.lead small{display:block;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);font-weight:600}
+.lead p{font-family:var(--serif);font-style:italic;font-size:.86rem;line-height:1.55;margin:5px 0 2px;color:var(--ink2)}
+.tabs{display:flex;padding:0 6px;border-bottom:1px solid var(--line);font-size:.72rem;color:var(--muted)}
+.tabs span{padding:10px 8px 8px;border-bottom:2px solid transparent}.tabs span:first-child{color:var(--ink);font-weight:600;border-bottom-color:var(--gold)}
+.img{background-size:cover;background-position:center 55%}
+
+/* Шапка: зона кнопок сверху зарезервирована отступом, плашка прижата к низу и растёт вниз — наложения быть не может */
+.art{position:relative;min-height:250px;display:flex;flex-direction:column;justify-content:flex-end;padding:58px 10px 10px}
+.bar{position:absolute;top:12px;left:12px;right:12px;display:flex;align-items:center;gap:6px;z-index:2}
+.bar .sp{flex:1}
+.gbtn{height:32px;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0 12px;border-radius:16px;font-size:.74rem;font-weight:600;color:#fff;
+  background:rgba(18,20,26,.42);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18);white-space:nowrap}
+.gbtn.ic{width:32px;padding:0}
+.gbtn svg{width:15px;height:15px}
+.gbtn[aria-disabled="true"]{opacity:.4}
+.glass{position:relative;border-radius:18px;padding:20px 14px 12px;background:rgba(18,20,26,.42);backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);border:1px solid rgba(255,255,255,.14)}
+.pill{position:absolute;left:50%;top:-12px;transform:translateX(-50%);background:#e9d3a0;color:#3b2c10;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:12px;white-space:nowrap;box-shadow:0 4px 12px -4px rgba(0,0,0,.4)}
+.verse{text-align:center;margin:0;color:#fff;font-family:var(--serif);font-size:1rem;line-height:1.5}
+.nav{display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+
+/* общая основа D */
+.nav{border-top:1px solid rgba(255,255,255,.16);padding-top:8px;margin-top:10px;align-items:flex-end}
+.nv{display:flex;flex-direction:column;gap:1px;color:#fff;font-size:.78rem;font-weight:600;min-width:0}
+.nv.r{align-items:flex-end;text-align:right}
+.nv small{font-size:.58rem;font-weight:500;color:#f1dfb4;letter-spacing:.06em;text-transform:uppercase}
+/* D1 — как выбрано */
+/* D2 — номер крупнее с засечками, подпись снизу */
+.d2 .nv{flex-direction:column-reverse}
+.d2 .nv b{font-family:var(--serif);font-size:.95rem;font-weight:600}
+/* D3 — стрелка в тонком круге */
+.d3 .nv{flex-direction:row;align-items:center;gap:8px}
+.d3 .nv.r{flex-direction:row-reverse}
+.d3 .ci{flex:none;width:28px;height:28px;border-radius:14px;border:1px solid rgba(255,255,255,.45);display:grid;place-items:center;font-size:.95rem}
+.d3 .tx{display:flex;flex-direction:column;gap:1px}
+.d3 .nv.r .tx{align-items:flex-end}
+/* D4 — со счётчиком по центру */
+.d4 .mid{align-self:center;display:flex;flex-direction:column;align-items:center;gap:4px;color:#f1dfb4;font-size:.6rem;font-weight:600;letter-spacing:.06em}
+.d4 .dots{display:flex;gap:3px}.d4 .dots i{width:4px;height:4px;border-radius:2px;background:rgba(255,255,255,.3)}.d4 .dots i.on{width:12px;background:#f1dfb4}
+/* D5 — начало соседнего стиха */
+.d5 .nav{gap:14px}
+.d5 .nv{flex:1;font-weight:500}
+.d5 .nv b{font-size:.74rem;font-weight:600}
+.d5 .nv em{font-style:italic;font-family:var(--serif);font-size:.72rem;font-weight:400;color:rgba(255,255,255,.78);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35}
+footer{max-width:1000px;margin:20px auto 0;color:var(--muted);font-size:.85rem;line-height:1.5}
+</style>
+
+<header>
+  <h1>Подписи стихов</h1>
+  <p>Основа — вариант D: подписи под тонкой линией вместо кнопок. Пять вариаций, каждая на четырёх акварелях.</p>
+</header>
+<section class="row d1"><h2><b>1</b>Как выбрано</h2><p>Сверху мелко «ПРЕДЫДУЩИЙ / СЛЕДУЮЩИЙ», под ними «‹ 1:30» и «2:2 ›».</p><div class="cards" data-v="1"></div></section>
+<section class="row d2"><h2><b>2</b>Номер крупнее</h2><p>Номер стиха крупно и с засечками, подпись под ним — сначала видно «куда», потом «что это».</p><div class="cards" data-v="2"></div></section>
+<section class="row d3"><h2><b>3</b>Стрелка в круге</h2><p>Стрелка в тонком круге рядом с подписью — сразу понятно, что это нажимается.</p><div class="cards" data-v="3"></div></section>
+<section class="row d4"><h2><b>4</b>С местом в главе</h2><p>Между подписями — «СТИХ 1 ИЗ 18» и полоска-точки: где этот стих в главе.</p><div class="cards" data-v="4"></div></section>
+<section class="row d5"><h2><b>5</b>Начало соседнего стиха</h2><p>Под номером — первые слова соседнего стиха курсивом. Читатель видит, о чём следующий стих, ещё до перехода.</p><div class="cards" data-v="5"></div></section>
+<footer>Зона нажатия у подписей — во всю половину строки, не меньше 44 точек.</footer>
+
+<script>
+const ARTS=[["arts/sirach.webp","Сирах 2:1","Сын мой! если ты приступаешь служить Господу Богу, то приготовь душу твою к искушению:"],
+ ["arts/h28.webp","Исаия 11:6","Тогда волк будет жить вместе с ягненком, и барс будет лежать вместе с козленком; и теленок, и молодой лев, и вол будут вместе, и малое дитя будет водить их."],
+ ["arts/h12.webp","4 Царств 2:11","Когда они шли и дорогою разговаривали, вдруг явилась колесница огненная и кони огненные, и разлучили их обоих, и понесся Илия в вихре на небо."],
+ ["arts/h8.webp","Руфь 2:2","И сказала Руфь Моавитянка Ноемини: пойду я на поле и буду подбирать колосья по следам того, у кого найду благоволение. Она сказала ей: пойди, дочь моя."]];
+const LEAD="Кто решил жить с Богом, пусть заранее знает: трудности будут – так проверяется и крепнет вера.";
+const tail=`<div class="lead"><small>Кратко</small><p>${LEAD}</p></div><div class="tabs"><span>Смысл</span><span>Контекст</span><span>Ссылки</span><span>Переводы</span></div>`;
+const NB={"Сирах 2:1":["1:30","2:2"],"Исаия 11:6":["11:5","11:7"],"4 Царств 2:11":["2:10","2:12"],"Руфь 2:2":["2:1","2:3"]};
+const share='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/></svg>';
+const back='<span class="gbtn">‹ Сирах 2</span>';
+const glass=(r,v,inner='')=>`<div class="glass"><span class="pill">${r}</span><p class="verse">${v}</p>${inner}</div>`;
+const POS={"Сирах 2:1":"СТИХ 1 ИЗ 18","Исаия 11:6":"СТИХ 6 ИЗ 16","4 Царств 2:11":"СТИХ 11 ИЗ 25","Руфь 2:2":"СТИХ 2 ИЗ 23"};
+const topBar=`<div class="bar">${back}<span class="sp"></span><span class="gbtn ic" title="Поделиться">${share}</span></div>`;
+const art=(u,inner)=>`<div class="art img" style="background-image:url(${u})">${topBar}${inner}</div>${tail}`;
+const PREV={"Сирах 2:1":"Не возноси себя, чтобы не упасть…","Исаия 11:6":"И будет препоясанием чресл Его правда…","4 Царств 2:11":"И сказал он: трудного ты просишь…","Руфь 2:2":"У Ноемини был родственник по мужу ее…"};
+const NEXT={"Сирах 2:1":"управь сердце твое и будь тверд…","Исаия 11:6":"И корова будет пастись с медведицею…","4 Царств 2:11":"Елисей же смотрел и воскликнул…","Руфь 2:2":"Она пошла, и пришла, и подбирала…"};
+const IDX={"Сирах 2:1":[1,18],"Исаия 11:6":[6,16],"4 Царств 2:11":[11,25],"Руфь 2:2":[2,23]};
+const dots=r=>{const[i,n]=IDX[r];const k=Math.round((i-1)/(n-1)*6);return `<span class="dots">${[0,1,2,3,4,5,6].map(j=>`<i class="${j===k?'on':''}"></i>`).join('')}</span>`};
+const nav=inner=>`<div class="nav">${inner}</div>`;
+const T={
+ 1:([u,r,v])=>{const[p,n]=NB[r];return art(u,glass(r,v,nav(`<span class="nv"><small>Предыдущий</small>‹ ${p}</span><span class="nv r"><small>Следующий</small>${n} ›</span>`)))},
+ 2:([u,r,v])=>{const[p,n]=NB[r];return art(u,glass(r,v,nav(`<span class="nv"><small>Предыдущий</small><b>‹ ${p}</b></span><span class="nv r"><small>Следующий</small><b>${n} ›</b></span>`)))},
+ 3:([u,r,v])=>{const[p,n]=NB[r];return art(u,glass(r,v,nav(`<span class="nv"><span class="ci">‹</span><span class="tx"><small>Предыдущий</small>${p}</span></span><span class="nv r"><span class="ci">›</span><span class="tx"><small>Следующий</small>${n}</span></span>`)))},
+ 4:([u,r,v])=>{const[p,n]=NB[r];const[i,c]=IDX[r];return art(u,glass(r,v,nav(`<span class="nv"><small>Предыдущий</small>‹ ${p}</span><span class="mid">СТИХ ${i} ИЗ ${c}${dots(r)}</span><span class="nv r"><small>Следующий</small>${n} ›</span>`)))},
+ 5:([u,r,v])=>{const[p,n]=NB[r];return art(u,glass(r,v,nav(`<span class="nv"><b>‹ ${p}</b><em>${PREV[r]}</em></span><span class="nv r"><b>${n} ›</b><em>${NEXT[r]}</em></span>`)))}};
+document.querySelectorAll('.cards').forEach(c=>{c.innerHTML=ARTS.map(a=>`<div class="ph">${T[c.dataset.v](a)}</div>`).join('')});
+</script>

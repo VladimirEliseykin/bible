@@ -1,0 +1,224 @@
+<title>Панель стиха: сравнение</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Golos+Text:wght@400;500;600&display=swap">
+<style>
+/* Layout: три телефона со страницей стиха Сир 2:1; одинаковые данные, разное оформление шапки и разделов */
+:root{
+  --page:#e8ebee; --bg:#ffffff; --soft:#f4f6f8; --ink:#1f242c; --ink2:#3a414c; --muted:#6b7482; --gold:#b08a3e; --gold2:#8a6a2c;
+  --line:#ebe5d8; --cream:#fbf6ec; --sel:#f6efe0; --link:#2f5d8a;
+  --serif:"Literata", Georgia, serif; --ui:"Golos Text", system-ui, sans-serif;
+  color-scheme:light;
+}
+body{background:var(--page);color:var(--ink);font-family:var(--ui);padding:32px 16px 48px}
+header{max-width:1500px;margin:0 auto 24px}
+h1{font-family:var(--serif);font-weight:600;font-size:2.1rem;margin:0 0 8px}
+header p{margin:0;color:var(--muted);max-width:78ch;line-height:1.5}
+.wall{display:flex;flex-wrap:wrap;gap:36px 28px;justify-content:center;max-width:1500px;margin:0 auto}
+.slot{display:flex;flex-direction:column;gap:10px;width:350px;max-width:100%}
+.slot h2{font-size:1rem;margin:0;font-weight:600;display:flex;align-items:center;gap:8px}
+.slot h2 b{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;font-size:.8rem}
+.slot p{margin:0;color:var(--muted);font-size:.85rem;line-height:1.45;min-height:5.8em}
+.phone{position:relative;width:100%;aspect-ratio:9/19;border-radius:38px;background:var(--bg);border:8px solid #12161c;overflow:hidden;box-shadow:0 18px 40px -18px rgba(20,30,45,.45)}
+.pg{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none}.pg::-webkit-scrollbar{display:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0;text-align:left}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+a{color:var(--link)}
+/* вкладки */
+.tabs{position:sticky;top:0;z-index:2;display:flex;gap:5px;overflow-x:auto;padding:10px 14px;background:var(--bg);scrollbar-width:none;border-bottom:1px solid var(--line)}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;padding:6px 12px;border-radius:15px;font-size:.74rem;font-weight:500;color:var(--ink2);background:var(--soft);transition:background .2s,color .2s}
+.tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
+.pane{display:none;padding:14px 16px 28px}.pane.on{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.pane.on{animation:none}}
+/* общий текст */
+.t{font-size:.84rem;line-height:1.62;color:var(--ink);margin:0 0 10px}
+.q{font-family:var(--serif);font-size:.84rem;line-height:1.55;margin:0 0 6px;color:var(--ink)}
+.src{font-size:.7rem;color:var(--link);text-decoration:none;display:inline-flex;gap:4px;margin:0 0 12px}
+.src::before{content:"↗"}
+.word{background:var(--sel);border-radius:14px;padding:11px 12px;margin:0 0 12px;font-size:.82rem;line-height:1.55}
+.word b{font-family:var(--serif)}
+.xr{display:block;width:100%;background:var(--soft);border-radius:12px;padding:10px 12px;margin:0 0 8px}
+.xr b{display:block;font-size:.72rem;color:var(--gold2);margin-bottom:3px}
+.xr span{font-family:var(--serif);font-size:.82rem;line-height:1.5}
+.tr{padding:0 0 12px;margin:0 0 12px;border-bottom:1px solid var(--line)}
+.tr:last-child{border-bottom:0}
+.tr b{display:block;font-size:.68rem;color:var(--muted);font-weight:600;letter-spacing:.04em;margin-bottom:3px}
+.tr span{font-family:var(--serif);font-size:.86rem;line-height:1.5}
+.pane{min-height:640px}
+/* варианты панели */
+.dock .gold{background:#e9d3a0;color:#3b2c10;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;border-radius:14px;white-space:nowrap}
+.d2 .mid{flex:1;display:flex;justify-content:center;align-items:center;gap:6px}
+.d3{flex-direction:column;align-items:stretch;gap:6px;padding:8px 8px 6px;border-radius:22px}
+.d3 .prog{height:3px;border-radius:2px;background:rgba(255,255,255,.18);margin:0 6px;overflow:hidden}
+.d3 .prog i{display:block;height:100%;width:5.5%;background:#e9d3a0;border-radius:2px}
+.d3 .rw{display:flex;align-items:center;gap:6px}
+.d3 .gbtn{height:36px;flex-direction:column;gap:0;padding:0 12px;line-height:1.1}
+.d3 .gbtn small{font-size:.58rem;font-weight:500;opacity:.75}
+.d3 .cnt{flex:1;text-align:center;color:#fff;font-size:.66rem;opacity:.85}
+.d3 .cnt b{display:block;color:#f1dfb4;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
+.dock.d4{background:rgba(255,255,255,.62);backdrop-filter:blur(18px) saturate(1.6);-webkit-backdrop-filter:blur(18px) saturate(1.6);border:1px solid rgba(255,255,255,.75);box-shadow:0 10px 28px -8px rgba(30,30,40,.3)}
+.d4 .gbtn{color:var(--ink);background:rgba(255,255,255,.75);border-color:rgba(31,36,44,.08);backdrop-filter:none}
+.d4 .mid{flex:1;display:flex;justify-content:center}
+/* как плашка главы на экране чтения */
+.dock.rd{left:14px;right:14px;bottom:18px;height:40px;padding:0 4px;border-radius:20px;background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 4px 14px -2px rgba(30,30,40,.22);gap:0}
+.rd .ar{display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:36px;padding:0 8px;border-radius:18px;font-size:1.25rem;color:var(--ink);gap:4px}
+.rd .ar small{font-size:.66rem;font-weight:600;color:var(--muted)}
+.rd .tt{flex:1;text-align:center;font-size:.86rem;font-weight:600;color:var(--ink)}
+footer{max-width:900px;margin:34px auto 0;color:var(--muted);font-size:.85rem;line-height:1.55}
+
+/* шапка (вариант 2) */
+/* «Кратко» (вариант 3) */
+.leadw{background:var(--cream);padding:14px 18px 10px;text-align:center}
+.leadw small{display:block;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);font-weight:600}
+.leadw p{font-family:var(--serif);font-style:italic;font-size:.94rem;line-height:1.6;margin:6px 0 4px;color:var(--ink2)}
+.orn{color:var(--gold);text-align:center;font-size:.8rem;letter-spacing:.5em;margin:4px 0 2px}
+/* вкладки (вариант 2) */
+.tabs{gap:0;padding:0 8px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.tabs button{background:none;border-radius:0;padding:12px 10px 10px;color:var(--muted);border-bottom:2px solid transparent}
+.tabs button[aria-selected="true"]{background:none;color:var(--ink);font-weight:600;border-bottom-color:var(--gold)}
+.tabs em{font-style:normal;font-size:.62rem;color:var(--gold2);margin-left:3px;vertical-align:1px}
+/* пункты с точками (вариант 3) */
+.term{margin:0}
+.term dt{display:flex;align-items:center;gap:8px;font-family:var(--serif);font-weight:600;font-size:.88rem;color:var(--ink);margin:0 0 4px}
+.term dt::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.term dd{margin:0 0 16px;padding-left:14px;font-size:.84rem;line-height:1.6;color:var(--ink2)}
+.term dd .q{font-size:.88rem;margin:0}
+.term dd .src{margin:6px 0 0}
+.note{font-size:.72rem;color:var(--muted);line-height:1.45;font-style:normal}
+.fold{position:relative;max-height:4.9em;overflow:hidden}
+.fold::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1.8em;background:linear-gradient(transparent,#fff)}
+.fold.open{max-height:none}.fold.open::after{display:none}
+.morebtn{font-size:.72rem;color:var(--gold2);font-weight:600;margin:-10px 0 16px 14px}
+
+.term dd{padding-bottom:14px;border-bottom:1px solid var(--line)}
+.term dd:last-of-type{border-bottom:0}
+.rc{display:flex;gap:10px;align-items:center;width:100%;padding:10px 12px;margin:0 0 8px;border-radius:14px;background:var(--soft)}
+.rc div{flex:1;min-width:0}.rc b{display:block;font-size:.72rem;color:var(--gold2);margin-bottom:3px}
+.rc span{font-family:var(--serif);font-size:.84rem;line-height:1.5}.rc i{font-style:normal;color:var(--muted)}
+/* шапка (вариант 1) */
+.art{position:relative;min-height:250px;display:flex;flex-direction:column;justify-content:flex-end;padding:58px 10px 10px;background:url(arts/sirach.webp) center 55%/cover}
+.bar{position:absolute;top:28px;left:12px;right:12px;display:flex;align-items:center;gap:6px;z-index:2}
+.art{padding-top:74px}
+.sp{flex:1}
+.gbtn{height:32px;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0 12px;border-radius:16px;font-size:.74rem;font-weight:600;color:#fff;background:rgba(18,20,26,.42);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18);white-space:nowrap}
+.gbtn.ic{width:32px;padding:0}.gbtn svg{width:15px;height:15px}
+.glass{position:relative;border-radius:18px;padding:20px 14px 12px;background:rgba(18,20,26,.42);backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);border:1px solid rgba(255,255,255,.14)}
+.pill{position:absolute;left:50%;top:-12px;transform:translateX(-50%);background:#e9d3a0;color:#3b2c10;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:12px;white-space:nowrap;box-shadow:0 4px 12px -4px rgba(0,0,0,.4)}
+.verse{text-align:center;margin:0;color:#fff;font-family:var(--serif);font-size:1rem;line-height:1.5}
+.nav{display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+/* липкая компактная шапка (B) */
+.mini{position:absolute;top:0;left:0;right:0;z-index:4;display:flex;align-items:center;gap:6px;padding:28px 12px 8px;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line);transform:translateY(-100%);transition:transform .25s}
+.mini.show{transform:none}
+.mini .lbtn{height:30px;display:inline-flex;align-items:center;padding:0 11px;border-radius:15px;font-size:.72rem;font-weight:600;background:var(--soft);color:var(--ink)}
+.mini .lbtn.ic{width:30px;padding:0;justify-content:center}
+.mini .mref{flex:1;text-align:center;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold2)}
+.vb .tabs{top:66px}
+/* нижняя панель (C) */
+.dock{position:absolute;left:14px;right:14px;bottom:14px;z-index:4;display:flex;align-items:center;gap:6px;padding:6px;border-radius:24px;background:rgba(18,20,26,.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transform:translateY(160%);transition:transform .25s}
+.dock.show{transform:none}
+.dock .gbtn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.1)}
+.dock .dref{flex:1;text-align:center;color:#f1dfb4;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.pane{min-height:640px}
+/* варианты панели */
+.dock .gold{background:#e9d3a0;color:#3b2c10;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;border-radius:14px;white-space:nowrap}
+.d2 .mid{flex:1;display:flex;justify-content:center;align-items:center;gap:6px}
+.d3{flex-direction:column;align-items:stretch;gap:6px;padding:8px 8px 6px;border-radius:22px}
+.d3 .prog{height:3px;border-radius:2px;background:rgba(255,255,255,.18);margin:0 6px;overflow:hidden}
+.d3 .prog i{display:block;height:100%;width:5.5%;background:#e9d3a0;border-radius:2px}
+.d3 .rw{display:flex;align-items:center;gap:6px}
+.d3 .gbtn{height:36px;flex-direction:column;gap:0;padding:0 12px;line-height:1.1}
+.d3 .gbtn small{font-size:.58rem;font-weight:500;opacity:.75}
+.d3 .cnt{flex:1;text-align:center;color:#fff;font-size:.66rem;opacity:.85}
+.d3 .cnt b{display:block;color:#f1dfb4;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
+.dock.d4{background:rgba(255,255,255,.62);backdrop-filter:blur(18px) saturate(1.6);-webkit-backdrop-filter:blur(18px) saturate(1.6);border:1px solid rgba(255,255,255,.75);box-shadow:0 10px 28px -8px rgba(30,30,40,.3)}
+.d4 .gbtn{color:var(--ink);background:rgba(255,255,255,.75);border-color:rgba(31,36,44,.08);backdrop-filter:none}
+.d4 .mid{flex:1;display:flex;justify-content:center}
+/* как плашка главы на экране чтения */
+.dock.rd{left:14px;right:14px;bottom:18px;height:40px;padding:0 4px;border-radius:20px;background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 4px 14px -2px rgba(30,30,40,.22);gap:0}
+.rd .ar{display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:36px;padding:0 8px;border-radius:18px;font-size:1.25rem;color:var(--ink);gap:4px}
+.rd .ar small{font-size:.66rem;font-weight:600;color:var(--muted)}
+.rd .tt{flex:1;text-align:center;font-size:.86rem;font-weight:600;color:var(--ink)}
+footer{max-width:900px;margin:34px auto 0;color:var(--muted);font-size:.85rem;line-height:1.55}
+</style>
+
+<header>
+  <h1>Панель стиха: сравнение</h1>
+  <p>Вариант C: при прокрутке вниз снизу появляется панель для перехода между стихами. Четыре варианта самой панели; телефоны открыты уже прокрученными — прокрутите вверх, чтобы панель спряталась и вернулась шапка.</p>
+</header>
+<div class="wall">
+  <section class="slot"><h2><b>1</b>Тёмная пилюля</h2><p>Тёмное стекло: «‹ 1:30 · СИРАХ 2:1 · 2:2 ›».</p><div class="phone" data-s="1"></div></section>
+  <section class="slot"><h2><b>4</b>Светлое стекло</h2><p>Белая матовая пилюля в стиле вкладок, номер стиха — золотой пилюлей.</p><div class="phone" data-s="4"></div></section>
+  <section class="slot"><h2><b>5</b>Как плашка главы</h2><p>Ровно как «‹ Левит 3 ›» на экране чтения: белая, непрозрачная, тонкие стрелки по краям, номер стиха по центру. Одинаково на обоих экранах.</p><div class="phone" data-s="5"></div></section>
+  <section class="slot"><h2><b>6</b>Как плашка главы, с номерами</h2><p>Тот же вид, но у стрелок мелко подписаны соседние стихи — видно, куда перейдёшь.</p><div class="phone" data-s="6"></div></section>
+</div>
+<footer>Свайп влево/вправо по странице тоже листает стихи. У первого стиха книги стрелка «назад» неактивна, у последнего – «вперёд».</footer>
+
+<script>
+const D={
+ ref:"Сирах 2:1",
+ verse:"Сын мой! если ты приступаешь служить Господу Богу, то приготовь душу твою к искушению:",
+ lead:"Кто решил жить с Богом, пусть заранее знает: трудности будут. Это не знак, что Бог оставил, — так проверяется и крепнет вера.",
+ meaning:`<p class="t"><b>«Сын мой»</b> — так учитель мудрости обращается к ученику, с любовью, как отец. Так же начинаются наставления в Притчах.</p>
+<p class="t"><b>«Служить Господу»</b> — не только молиться, а всей жизнью исполнять Его заповеди.</p>
+<p class="t"><b>«Приготовь душу к искушению»</b> — будь готов к испытаниям: болезни, обидам, потерям, насмешкам. Стихи 2–6 объясняют, как их проходить: держаться Бога, не смущаться, терпеть и надеяться.</p>`,
+ word:`<div class="word">Слово <b>«искушение»</b> здесь значит не «соблазн согрешить», а <b>испытание</b>, проверку на прочность. В греческом тексте — <b>πειρασμός</b> (пирасмо́с): проба, испытание.</div>`,
+ context:`<p class="t"><b>Кто и когда.</b> Иисус, сын Сирахов, иерусалимский учитель, около 190–180 гг. до Р. Х. Его внук перевёл книгу на греческий в Египте (Пролог: «в тридцать восьмом году при царе Евергете»).</p>
+<p class="t"><b>Обстановка.</b> Иудея под властью эллинских царей; многие соблазнялись греческим образом жизни. Остаться верным Закону было трудно — Сирах готовит учеников к этому.</p>
+<p class="t"><b>Место в книге.</b> Глава 2 продолжает главу 1 о трепете перед Богом: мудрость начинается с трепета, а проверяется в испытаниях.</p>`,
+ refs:[
+  ["Иакова 1:2–3","С великою радостью принимайте, братия мои, когда впадаете в различные искушения, зная, что испытание вашей веры производит терпение;"],
+  ["1 Петра 4:12","Возлюбленные! огненного искушения, для испытания вам посылаемого, не чуждайтесь, как приключения для вас странного,"],
+  ["Деяния 14:22","…поучая, что многими скорбями надлежит нам войти в Царствие Божие."],
+  ["2 Тимофею 3:12","Да и все, желающие жить благочестиво во Христе Иисусе, будут гонимы."],
+  ["Сирах 2:5","ибо золото испытывается в огне, а люди, угодные Богу, — в горниле уничижения."],
+  ["Притчи 1:8","Слушай, сын мой, наставление отца твоего и не отвергай завета матери твоей,"]],
+ trans:[
+  ["Синодальный","Сын мой! если ты приступаешь служить Господу Богу, то приготовь душу твою к искушению:"],
+  ["Церковнославянский","Ча́до, а́ще присту́паеши рабо́тати Го́сподеви Бо́гу, угото́ви ду́шу твою́ во искуше́ние."],
+  ["Греческий (Септуагинта)","Τέκνον, εἰ προσέρχῃ δουλεύειν κυρίῳ, ἑτοίμασον τὴν ψυχήν σου εἰς πειρασμόν."]],
+ fathers:`<p class="q">«Решившийся идти по пути добродетели, не должен смущаться теми препятствиями, какие он встретит на этом пути, зная, что препятствия эти, попущением Божиим, служат к испытанию его веры и укреплению его добродетели».</p>
+<a class="src" href="https://www.azbyka.ru/otechnik/Lopuhin/tolkovanie-na-knigu-premudrosti-iisusa-syna-sirahova/2" target="_blank" rel="noopener">А. П. Лопухин, Толковая Библия · Азбука веры</a>
+<p class="t">Слова «Чадо, аще приступаеши работати Господеви…» свт. Филарет Московский положил в основу слова о прп. Сергии Радонежском.</p>
+<a class="src" href="https://azbyka.ru/otechnik/Filaret_Moskovskij/slova-i-rechi/108" target="_blank" rel="noopener">Свт. Филарет Московский, Слово в день обретения мощей прп. Сергия</a>`
+};
+D.lead="Кто решил жить с Богом, пусть заранее знает: трудности будут. Это не знак, что Бог оставил – так проверяется и крепнет вера.";
+const TERMS=[["«искушение»","Не «соблазн согрешить», а <b>испытание</b>, проверка на прочность. По-гречески <b>πειρασμός</b> (пирасмо́с)."],["«Сын мой»","Учитель мудрости обращается к ученику с любовью, как отец. Так начинаются и наставления в Притчах."],["«служить Господу»","Не только молиться, а всей жизнью исполнять Его заповеди."],["«приготовь душу»","Будь заранее готов к болезням, обидам, потерям, насмешкам. Стихи 2–6 объясняют, как их проходить: держаться Бога, не смущаться, терпеть и надеяться."]];
+const CTX=[["Кто и когда","Иисус, сын Сирахов, учитель в Иерусалиме, около 190–180 гг. до Р. Х. Его внук перевёл книгу на греческий в Египте."],["Обстановка","Иудея под властью эллинских царей; многие соблазнялись греческим образом жизни. Остаться верным Закону было трудно – Сирах готовит учеников к этому."],["Место в книге","Глава 2 продолжает главу 1 о трепете перед Богом: мудрость начинается с трепета, а проверяется в испытаниях."]];
+const FATHERS=[["А. П. Лопухин, Толковая Библия",`<p class="q">«Решившийся идти по пути добродетели, не должен смущаться теми препятствиями, какие он встретит на этом пути, зная, что препятствия эти, попущением Божиим, служат к испытанию его веры и укреплению его добродетели».</p><a class="src" href="https://www.azbyka.ru/otechnik/Lopuhin/tolkovanie-na-knigu-premudrosti-iisusa-syna-sirahova/2" target="_blank" rel="noopener">Азбука веры</a>`],["Свт. Филарет Московский",`Положил слова «Чадо, аще приступаеши работати Господеви…» в основу слова о прп. Сергии Радонежском.<br><a class="src" href="https://azbyka.ru/otechnik/Filaret_Moskovskij/slova-i-rechi/108" target="_blank" rel="noopener">Слово в день обретения мощей прп. Сергия</a>`]];
+const TRANS=[...D.trans,["Современный перевод","<span class=\"note\">Здесь будет текст современного перевода с греческого – после того как выберем перевод и получим разрешение.</span>"]];
+const OT=new Set(["Сирах 2:5","Притчи 1:8"]);
+let uid=0;
+const dl=(rows,fold)=>`<dl class="term">${rows.map(([t,d])=>{const long=fold&&d.length>170;const id='f'+(uid++);return `<dt>${t}</dt><dd>${long?`<div class="fold" id="${id}">${d}</div>`:d}</dd>${long?`<button class="morebtn" data-f="${id}">Читать полностью</button>`:''}`}).join('')}</dl>`;
+const q=t=>`<p class="q">${t}</p>`;
+const refRows=l=>l.map(([r,t])=>[r,q(t)]);
+const transRows=TRANS.map(([n,t])=>[n,t.startsWith('<')?t:q(t)]);
+const refCards=()=>D.refs.map(([r,t])=>`<button class="rc"><div><b>${r}</b><span>${t}</span></div><i>›</i></button>`).join('');
+const TABS=["Смысл","Контекст","Ссылки","Переводы","Отцы"];
+const tabs=()=>`<div class="tabs" role="tablist">${TABS.map((t,i)=>`<button role="tab" aria-selected="${i===0}" data-p="${i}">${t}</button>`).join('')}</div>`;
+const panes=l=>l.map((h,i)=>`<div class="pane${i===0?' on':''}" data-p="${i}">${h}</div>`).join('');
+const share='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/></svg>';
+const head=`<div class="art"><div class="bar"><span class="gbtn">‹ Сирах 2</span><span class="sp"></span><span class="gbtn ic">${share}</span></div><div class="glass"><span class="pill">${D.ref}</span><p class="verse">${D.verse}</p><div class="nav"><span class="gbtn">‹ 1:30</span><span class="gbtn">2:2 ›</span></div></div></div><div class="leadw"><small>Кратко</small><p>${D.lead}</p><div class="orn">✦ ✦ ✦</div></div>`;
+const body=`${tabs()}${panes([dl(TERMS),dl(CTX),refCards(),dl(transRows),dl(FATHERS,true)])}`;
+const mini=`<div class="mini"><span class="lbtn">‹ Сирах 2</span><span class="lbtn ic">‹</span><span class="mref">${D.ref}</span><span class="lbtn ic">›</span><span class="lbtn ic">${share.replace('currentColor','#1f242c')}</span></div>`;
+const dk={
+ 1:`<div class="dock"><span class="gbtn">‹ 1:30</span><span class="dref">${D.ref}</span><span class="gbtn">2:2 ›</span></div>`,
+ 2:`<div class="dock d2"><span class="gbtn">‹ 1:30</span><span class="mid"><span class="gold">${D.ref}</span><span class="gbtn ic">${share}</span></span><span class="gbtn">2:2 ›</span></div>`,
+ 3:`<div class="dock d3"><div class="prog"><i></i></div><div class="rw"><span class="gbtn">‹ 1:30<small>Пред. стих</small></span><span class="cnt"><b>${D.ref}</b>стих 1 из 18</span><span class="gbtn">2:2 ›<small>След. стих</small></span></div></div>`,
+ 4:`<div class="dock d4"><span class="gbtn">‹ 1:30</span><span class="mid"><span class="gold">${D.ref}</span></span><span class="gbtn">2:2 ›</span></div>`,
+ 5:`<div class="dock rd"><span class="ar">‹</span><span class="tt">${D.ref}</span><span class="ar">›</span></div>`,
+ 6:`<div class="dock rd"><span class="ar">‹ <small>1:30</small></span><span class="tt">${D.ref}</span><span class="ar"><small>2:2</small> ›</span></div>`};
+document.querySelectorAll('.phone').forEach(ph=>{
+  const s=ph.dataset.s;
+  ph.innerHTML=`<div class="pg">${head}${body}</div>${dk[s]}`;
+  const pg=ph.querySelector('.pg'),art=ph.querySelector('.art'),extra=ph.querySelector('.mini,.dock');
+  const upd=()=>{if(extra)extra.classList.toggle('show',pg.scrollTop>art.offsetHeight-70)};
+  pg.addEventListener('scroll',upd);
+  // сразу показываем состояние «прокручено», чтобы разница была видна без действий
+  requestAnimationFrame(()=>{pg.scrollTop=art.offsetHeight+40;upd()});
+  ph.addEventListener('click',e=>{
+    const m=e.target.closest('.morebtn');if(m){ph.querySelector('#'+m.dataset.f).classList.add('open');m.remove();return}
+    const tab=e.target.closest('[role="tab"]');if(!tab)return;
+    ph.querySelectorAll('[role="tab"]').forEach(t=>t.setAttribute('aria-selected',t===tab));
+    ph.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.dataset.p===tab.dataset.p));});
+});
+</script>
