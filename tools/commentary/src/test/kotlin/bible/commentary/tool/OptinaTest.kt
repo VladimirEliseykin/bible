@@ -43,3 +43,16 @@ class PageTextTest {
         assertEquals("Блок один\n\nБлок два\n\nстрока", pageText(doc))
     }
 }
+
+class EkzegetTest {
+    @Test fun keepsOnlyAuthorsRangesAndTexts() {
+        val doc = org.jsoup.Jsoup.parse(
+            """<nav>Меню 1 2 3</nav><div class="interpretation_detail__content__leftSide">
+            <div class="interpretation_detail__content__leftSide-title"><div><a href="/x">Августин Иппонийский блаженный </a></div></div>
+            <div class="interpretation_detail__content__group"><p>Толкование на группу стихов:<a> Мф: 6: 9-9</a></p></div>
+            <div class="interpretation_detail__content__leftSide-text"><div><p>Итак, пусть <b>новый</b> народ.</p><p>Второй абзац.</p></div></div>
+            </div>""",
+        )
+        assertEquals("## Августин Иппонийский блаженный\n_Толкование на группу стихов: Мф: 6: 9-9_\n\nИтак, пусть новый народ.\n\nВторой абзац.", ekzegetText(doc))
+    }
+}

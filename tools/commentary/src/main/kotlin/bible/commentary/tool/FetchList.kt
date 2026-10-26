@@ -16,12 +16,19 @@ fun main(args: Array<String>) {
     for ((url, path) in lines) {
         val out = File(base, path)
         if (out.exists()) continue
-        try {
-            savePage(url, out)
-            done++
-        } catch (e: Exception) {
-            failed += "$url – ${e.message}"
+        // Медленные сайты (ekzeget.ru) иногда не отвечают вовремя: три попытки с паузой.
+        var error: Exception? = null
+        for (attempt in 1..3) {
+            error = try {
+                savePage(url, out)
+                null
+            } catch (e: Exception) {
+                e
+            }
+            if (error == null) break
+            Thread.sleep(5_000L * attempt)
         }
+        if (error == null) done++ else failed += "$url – ${error.message}"
         Thread.sleep(500)
     }
     println("library: скачано $done, уже было ${lines.size - done - failed.size}, ошибок ${failed.size}")
