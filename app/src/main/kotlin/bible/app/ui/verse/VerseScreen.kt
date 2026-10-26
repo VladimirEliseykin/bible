@@ -80,6 +80,7 @@ import bible.app.ui.theme.BibleColors
 import bible.app.ui.theme.Literata
 import bible.app.ui.theme.StatusBarIcons
 import bible.commentary.model.Link
+import bible.commentary.model.Reading
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -138,6 +139,7 @@ fun VerseScreen(
             onBack = { onBack(id) },
             onOpenRef = onOpenRef,
             onPastArt = { pastArt[id] = it },
+            onOpenVerse = { target -> scope.launch { pager.animateScrollToPage(nav.indexOf(target)) } },
         )
     }
 }
@@ -153,6 +155,7 @@ private fun VersePage(
     onBack: () -> Unit,
     onOpenRef: (Int) -> Unit,
     onPastArt: (Boolean) -> Unit,
+    onOpenVerse: (verseId: Int) -> Unit,
 ) {
     val list = rememberLazyListState()
     val stuck by remember { derivedStateOf { list.firstVisibleItemIndex >= 2 } }
@@ -188,8 +191,12 @@ private fun VersePage(
                         when (tab) {
                             VerseTab.Meaning -> Points(d.meaning, onOpenRef)
                             VerseTab.Context -> Points(d.context, onOpenRef)
-                            VerseTab.Fathers -> d.fathers.forEachIndexed { i, f ->
-                                FatherPoint(f.author, f.where, f.quote, f.url.ifEmpty { d.sourceUrls[f.source] }, last = i == d.fathers.lastIndex)
+                            VerseTab.Fathers -> {
+                                d.fathers.forEachIndexed { i, f ->
+                                    FatherPoint(f.author, f.where, f.quote, f.url.ifEmpty { d.sourceUrls[f.source] }, last = i == d.fathers.lastIndex && d.readings.isEmpty())
+                                }
+                                d.readings.forEachIndexed { i, r -> ReadingPoint(r, last = i == d.readings.lastIndex && d.seeAlso.isEmpty()) }
+                                d.seeAlso.forEach { s -> SeeAlsoCard(s) { onOpenVerse(s.verseId) } }
                             }
                             VerseTab.Life -> Points(d.life, onOpenRef)
                             VerseTab.Links -> d.links.forEach { LinkCard(it) }
@@ -394,6 +401,48 @@ private fun RefCard(ref: RefView, onClick: () -> Unit) {
         Column(Modifier.weight(1f)) {
             Text(ref.label, color = Gold2, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             Text(ref.text, Modifier.padding(top = 3.dp), fontFamily = Literata, fontSize = 15.sp, lineHeight = 23.sp, color = BibleColors.Ink)
+        }
+        Text("›", Modifier.padding(start = 8.dp), fontSize = 20.sp, color = BibleColors.Muted)
+    }
+}
+
+/** Толкование целиком: автор, сочинение, текст; длинное свёрнуто. */
+@Composable
+private fun ReadingPoint(r: Reading, last: Boolean) {
+    var open by rememberSaveable(r.author, r.text.length) { mutableStateOf(false) }
+    val long = r.text.length > 400
+    Column(Modifier.fillMaxWidth().padding(bottom = if (last) 0.dp else 14.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(6.dp).clip(CircleShape).background(BibleColors.Gold))
+            Text(r.author, Modifier.padding(start = 8.dp), fontFamily = Literata, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = BibleColors.Ink)
+        }
+        if (r.work.isNotEmpty()) Text(r.work, Modifier.padding(start = 14.dp, top = 2.dp), fontSize = 13.sp, color = BibleColors.Muted)
+        Text(
+            r.text, Modifier.padding(start = 14.dp, top = 4.dp),
+            fontFamily = Literata, fontSize = 15.sp, lineHeight = 24.sp, color = BibleColors.Ink,
+            maxLines = if (long && !open) 6 else Int.MAX_VALUE, overflow = TextOverflow.Ellipsis,
+        )
+        if (long && !open) {
+            Text("Читать полностью", Modifier.padding(start = 14.dp, top = 6.dp).clickable { open = true }, color = Gold2, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        }
+        if (!last) HorizontalDivider(Modifier.padding(start = 14.dp, top = 14.dp), thickness = 1.dp, color = BibleColors.Line)
+    }
+}
+
+/** «Златоуст, Феофилакт толкуют этот стих вместе с Мф 5:2 ›» – открывает тот стих. */
+@Composable
+private fun SeeAlsoCard(s: SeeAlsoView, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(top = 12.dp).clip(RoundedCornerShape(14.dp)).background(BibleColors.Tab)
+            .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 10.dp).testTag("see-also-${s.verseId}"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(s.authors.joinToString(", "), fontFamily = Literata, fontSize = 14.sp, lineHeight = 21.sp, color = BibleColors.Ink)
+            Text(
+                (if (s.authors.size == 1) "толкует" else "толкуют") + " этот стих вместе с ${s.label}",
+                Modifier.padding(top = 3.dp), color = Gold2, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+            )
         }
         Text("›", Modifier.padding(start = 8.dp), fontSize = 20.sp, color = BibleColors.Muted)
     }

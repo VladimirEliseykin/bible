@@ -52,3 +52,19 @@ val savePage by tasks.registering(JavaExec::class) {
     workingDir = layout.projectDirectory.asFile
     args(project.findProperty("url")?.toString() ?: "", project.findProperty("out")?.toString() ?: "")
 }
+
+/** Дословные толкования из корпуса в readings/ (хранится в git): ./gradlew -q :tools:commentary:buildReadings */
+val buildReadings by tasks.registering(JavaExec::class) {
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("bible.commentary.tool.ReadingsKt")
+    val dir = layout.projectDirectory
+    args(dir.dir("corpus").asFile.path, dir.file("optina-authors.json").asFile.path, dir.dir("readings").asFile.path, "Мф,Сир")
+}
+
+/** Скачать библиотеку источников по library/urls.tsv в corpus/: ./gradlew -q :tools:commentary:fetchLibrary */
+val fetchLibrary by tasks.registering(JavaExec::class) {
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("bible.commentary.tool.FetchListKt")
+    val dir = layout.projectDirectory
+    args(dir.file("library/urls.tsv").asFile.path, dir.asFile.path)
+}

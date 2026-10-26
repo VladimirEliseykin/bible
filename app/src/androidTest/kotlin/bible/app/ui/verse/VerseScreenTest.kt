@@ -3,11 +3,13 @@ package bible.app.ui.verse
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.unit.Density
 import androidx.test.platform.app.InstrumentationRegistry
@@ -64,6 +66,17 @@ class VerseScreenTest {
         assertTrue(shownText(d.meaning.first().title))
         rule.onNodeWithTag("tab-fathers-27002001").performClick()
         rule.waitUntil(5_000) { shownText(d.fathers.first().author) }
+    }
+
+    @Test fun fullCommentariesAndSeeAlsoOpensThatVerse() {
+        val d = data(51005003)
+        assertTrue("у Мф 5:3 есть полные толкования", d.readings.isNotEmpty())
+        val see = d.seeAlso.first { it.verseId == 51005002 }
+        open(51005003)
+        rule.onNodeWithTag("tab-fathers-51005003").performClick()
+        rule.waitUntil(5_000) { shownText(d.readings.first().author) }
+        rule.onNode(hasTestTag("see-also-${see.verseId}") and hasAnyAncestor(hasTestTag("verse-list-51005003"))).performScrollTo().performClick()
+        rule.waitUntil(5_000) { shown("verse-glass-51005002") && rule.onAllNodes(hasTestTag("verse-pill-51005002")).fetchSemanticsNodes().isNotEmpty() }
     }
 
     @Test fun bottomBarAppearsAfterScroll() {

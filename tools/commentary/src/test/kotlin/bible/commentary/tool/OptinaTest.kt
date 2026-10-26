@@ -36,3 +36,10 @@ class OptinaTest {
         assertTrue("## Лопухин А.П.\n\nРешившийся служить Богу." in text)
     }
 }
+
+class PageTextTest {
+    @Test fun keepsAllBlocksAsParagraphsWithoutMenus() {
+        val doc = org.jsoup.Jsoup.parse("<nav>Меню</nav><div class='a'>Блок <b>один</b></div><div><span>Блок два</span><br>строка</div><script>x()</script>")
+        assertEquals("Блок один\n\nБлок два\n\nстрока", pageText(doc))
+    }
+}

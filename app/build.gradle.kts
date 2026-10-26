@@ -101,12 +101,14 @@ val generateCommentaryDb by tasks.registering(JavaExec::class) {
     inputs.file(bibleDb)
     inputs.dir(src.dir("notes"))
     inputs.file(src.file("sources.json"))
+    inputs.dir(src.dir("readings"))
     inputs.files(classpath)
     outputs.dir(commentaryDbDir)
     args(
         bibleDb.asFile.path,
         src.dir("notes").asFile.path,
         src.file("sources.json").asFile.path,
+        src.dir("readings").asFile.path,
         commentaryDbDir.get().file("commentary.db").asFile.path,
         "1",
     )

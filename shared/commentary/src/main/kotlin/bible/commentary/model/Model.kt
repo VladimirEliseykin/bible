@@ -26,6 +26,15 @@ data class Father(val author: String, val quote: String, val source: String, val
 /** Статья или материал в интернете о стихе или главе: открывается в браузере. */
 @Serializable data class Link(val title: String, val url: String, val site: String)
 
+/**
+ * Толкование целиком, дословно (с bible.optina.ru, только общественное достояние): автор, сочинение, абзацы через пустую строку.
+ * [see] – вместо текста: автор толкует этот стих вместе с другим (id стиха), текст лежит там.
+ */
+@Serializable data class Reading(val author: String, val work: String, val text: String, val see: Int? = null)
+
+/** Толкования главы для сборщика: номер стиха строкой → толкования по порядку. */
+@Serializable data class ChapterReadings(val book: String, val chapter: Int, val verses: Map<String, List<Reading>>)
+
 /** Объяснение одного стиха. */
 @Serializable
 data class VerseNote(
@@ -56,6 +65,10 @@ fun decodeNote(bytes: ByteArray): VerseNote = Json.decodeFromString(VerseNote.se
 fun encodeChapter(note: ChapterNote): ByteArray = deflate(Json.encodeToString(ChapterNote.serializer(), note).toByteArray())
 
 fun decodeChapter(bytes: ByteArray): ChapterNote = Json.decodeFromString(ChapterNote.serializer(), String(inflate(bytes)))
+
+fun encodeText(text: String): ByteArray = deflate(text.toByteArray())
+
+fun decodeText(bytes: ByteArray): String = String(inflate(bytes))
 
 private fun deflate(input: ByteArray): ByteArray {
     val d = Deflater(Deflater.BEST_COMPRESSION).apply { setInput(input); finish() }
