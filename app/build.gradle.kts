@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.baselineprofile)
+    alias(libs.plugins.kotlin.serialization)
 }
 evaluationDependsOn(":tools:dbgen")
 android {
@@ -60,6 +61,7 @@ dependencies {
     implementation(libs.coroutines.android)
     implementation(libs.profileinstaller)
     implementation(libs.haze)
+    implementation(project(":shared:commentary"))
     baselineProfile(project(":baselineprofile"))
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)

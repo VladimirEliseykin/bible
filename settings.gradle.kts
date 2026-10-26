@@ -6,4 +6,4 @@ dependencyResolutionManagement {
     repositories { google(); mavenCentral() }
 }
 rootProject.name = "bible"
-include(":app", ":tools:dbgen", ":baselineprofile")
+include(":app", ":tools:dbgen", ":tools:commentary", ":shared:commentary", ":baselineprofile")
