@@ -2,6 +2,7 @@ package bible.app
 
 import android.app.Application
 import android.content.Context
+import bible.app.commentary.CommentaryDatabase
 import bible.app.data.AssetInstaller
 import bible.app.data.BibleDatabase
 import bible.app.data.ReadingStore
@@ -14,6 +15,7 @@ import kotlinx.coroutines.withContext
 
 class AppContainer(private val context: Context) {
     val store = ReadingStore(context)
+
     private val lock = Mutex()
     private var db: BibleDatabase? = null
 
@@ -34,6 +36,25 @@ class AppContainer(private val context: Context) {
             }
             opened!!
         }.also { db = it }
+    }
+
+    private val commentaryLock = Mutex()
+    private var commentary: CommentaryDatabase? = null
+
+    /** Объяснения стихов: лежат в APK рядом с bible.db и ставятся так же, один раз на сборку. */
+    suspend fun commentary(): CommentaryDatabase = commentaryLock.withLock {
+        commentary ?: withContext(Dispatchers.IO + NonCancellable) {
+            var opened: CommentaryDatabase? = null
+            AssetInstaller(
+                open = { context.assets.open("commentary.db") },
+                target = File(context.noBackupFilesDir, "commentary.db"),
+                version = installedBuild(),
+            ).install { file ->
+                opened?.close()
+                opened = CommentaryDatabase(file).also { check(it.version > 0) { "commentary.db: нет версии" } }
+            }
+            opened!!
+        }.also { commentary = it }
     }
 }
 

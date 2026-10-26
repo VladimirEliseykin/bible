@@ -67,6 +67,7 @@ import bible.app.data.ReadingStore
 import bible.app.data.TEXT_SIZES_SP
 import bible.app.ui.common.bottomTabsTop
 import bible.app.ui.common.Chip
+import bible.app.ui.common.GoldPill
 import bible.app.ui.theme.BibleColors
 import bible.app.ui.theme.StatusBarIcons
 import kotlinx.coroutines.launch
@@ -82,15 +83,22 @@ fun ReaderScreen(
     db: BibleDatabase,
     store: ReadingStore,
     onImmersiveChange: (Boolean) -> Unit = {},
+    onOpenVerse: (verseId: Int) -> Unit = {},
     onOpenToc: () -> Unit,
 ) {
     val vm: ReaderViewModel = viewModel(factory = viewModelFactory { initializer { ReaderViewModel(db, store) } })
     val start by vm.start.collectAsState()
-    start?.let { Reader(vm, it, onImmersiveChange, onOpenToc) }
+    start?.let { Reader(vm, it, onImmersiveChange, onOpenVerse, onOpenToc) }
 }
 
 @Composable
-private fun Reader(vm: ReaderViewModel, begin: ReadingPosition, onImmersiveChange: (Boolean) -> Unit, onOpenToc: () -> Unit) {
+private fun Reader(
+    vm: ReaderViewModel,
+    begin: ReadingPosition,
+    onImmersiveChange: (Boolean) -> Unit,
+    onOpenVerse: (Int) -> Unit,
+    onOpenToc: () -> Unit,
+) {
     val nav = vm.navigator
     val pager = rememberPagerState(initialPage = nav.indexOf(begin.ref)) { nav.totalChapters }
     val scope = rememberCoroutineScope()
@@ -153,6 +161,7 @@ private fun Reader(vm: ReaderViewModel, begin: ReadingPosition, onImmersiveChang
                 onArtVisibleChanged = { artVisible = it },
                 onAtEndChanged = { atEnd = it },
                 onSettled = { verse -> vm.onPositionSettled(ref, verse) },
+                onVerseClick = onOpenVerse,
             )
         }
 
@@ -200,16 +209,9 @@ private fun Reader(vm: ReaderViewModel, begin: ReadingPosition, onImmersiveChang
                     NavArrow("‹", "prev-chapter", enabled = nav.indexOf(current) > 0) {
                         scope.launch { pager.animateScrollToPage(pager.currentPage - 1) }
                     }
-                    Text(
-                        "${currentBook.shortTitle} ${current.chapter}",
-                        Modifier.weight(1f).padding(horizontal = 8.dp),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                        color = BibleColors.Ink,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    Box(Modifier.weight(1f).padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
+                        GoldPill("${currentBook.shortTitle} ${current.chapter}", Modifier.testTag("chapter-bar-title"))
+                    }
                     NavArrow("›", "next-chapter", enabled = nav.indexOf(current) < nav.totalChapters - 1) {
                         scope.launch { pager.animateScrollToPage(pager.currentPage + 1) }
                     }

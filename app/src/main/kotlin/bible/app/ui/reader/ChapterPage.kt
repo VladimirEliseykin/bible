@@ -3,6 +3,7 @@ package bible.app.ui.reader
 import bible.app.ui.art.ArtImage
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -70,6 +71,7 @@ fun ChapterPage(
     onArtVisibleChanged: (Boolean) -> Unit,
     onAtEndChanged: (Boolean) -> Unit,
     onSettled: (Int) -> Unit,
+    onVerseClick: (verseId: Int) -> Unit = {},
 ) {
     val context = LocalContext.current
     var restored by rememberSaveable { mutableStateOf(false) }
@@ -131,7 +133,7 @@ fun ChapterPage(
             }
         }
         items(verses, key = { it.id }, contentType = { "verse" }) { v ->
-            Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 22.dp).testTag("verse-${v.number}")) {
+            Row(Modifier.fillMaxWidth().clickable { onVerseClick(v.id) }.padding(start = 12.dp, end = 22.dp).testTag("verse-${v.number}")) {
                 Text(
                     "${v.number}",
                     Modifier.widthIn(min = 24.dp).padding(top = 19.dp).testTag("verse-number-${v.number}"),
