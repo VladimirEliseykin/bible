@@ -1,6 +1,7 @@
 package bible.commentary.tool
 
 import bible.commentary.model.ChapterNote
+import bible.commentary.model.Json
 import bible.commentary.model.Reading
 import bible.commentary.model.VerseNote
 import bible.commentary.model.encodeChapter
@@ -35,16 +36,16 @@ fun writePack(
             p.executeBatch()
         }
         c.prepareStatement("INSERT INTO verse_note VALUES(?,?)").use { p ->
-            notes.toSortedMap().forEach { (id, n) -> p.setInt(1, id); p.setBytes(2, encodeNote(n)); p.addBatch() }
+            notes.toSortedMap().forEach { (id, n) -> p.setInt(1, id); p.setBytes(2, encodeNote(n.shortDashes())); p.addBatch() }
             p.executeBatch()
         }
         c.prepareStatement("INSERT INTO chapter_note VALUES(?,?,?)").use { p ->
-            chapters.forEach { (k, n) -> p.setInt(1, k.first); p.setInt(2, k.second); p.setBytes(3, encodeChapter(n)); p.addBatch() }
+            chapters.forEach { (k, n) -> p.setInt(1, k.first); p.setInt(2, k.second); p.setBytes(3, encodeChapter(n.shortDashes())); p.addBatch() }
             p.executeBatch()
         }
         c.prepareStatement("INSERT INTO reading VALUES(?,?,?,?,?,?)").use { p ->
             readings.toSortedMap().forEach { (id, rs) ->
-                rs.forEachIndexed { i, r -> p.setInt(1, id); p.setInt(2, i); p.setString(3, r.author); p.setString(4, r.work); p.setBytes(5, encodeText(r.text)); r.see?.let { p.setInt(6, it) } ?: p.setNull(6, java.sql.Types.INTEGER); p.addBatch() }
+                rs.forEachIndexed { i, r -> p.setInt(1, id); p.setInt(2, i); p.setString(3, shortDashes(r.author)); p.setString(4, shortDashes(r.work)); p.setBytes(5, encodeText(shortDashes(r.text))); r.see?.let { p.setInt(6, it) } ?: p.setNull(6, java.sql.Types.INTEGER); p.addBatch() }
             }
             p.executeBatch()
         }
@@ -56,3 +57,10 @@ fun writePack(
     }
     DriverManager.getConnection("jdbc:sqlite:${out.path}").use { c -> c.createStatement().use { it.executeUpdate("VACUUM") } }
 }
+
+/** В приложении везде короткое тире «–» (решение владельца), и в дословных цитатах тоже: «—» заменяется при сборке. */
+private fun shortDashes(s: String) = s.replace('—', '–')
+
+private fun VerseNote.shortDashes() = Json.decodeFromString(VerseNote.serializer(), shortDashes(Json.encodeToString(VerseNote.serializer(), this)))
+
+private fun ChapterNote.shortDashes() = Json.decodeFromString(ChapterNote.serializer(), shortDashes(Json.encodeToString(ChapterNote.serializer(), this)))

@@ -40,3 +40,27 @@ class PackWriterTest {
         }
     }
 }
+
+class ShortDashTest {
+    @Test fun longDashesBecomeShortInNotesAndReadings() {
+        val out = File.createTempFile("commentary", ".db").apply { delete() }
+        writePack(
+            out,
+            notes = mapOf(27002001 to VerseNote(lead = "Кратко", fathers = listOf(bible.commentary.model.Father("Ф", "Это — цитата", "lopukhin")))),
+            chapters = emptyMap(),
+            readings = mapOf(27002001 to listOf(Reading("Лопухин", "Толковая — Библия", "Текст — толкования"))),
+            sources = emptyList(),
+            version = 1,
+        )
+        DriverManager.getConnection("jdbc:sqlite:${out.path}").use { c ->
+            c.createStatement().use { s ->
+                s.executeQuery("SELECT body FROM verse_note").use { r -> r.next(); assertEquals("Это – цитата", decodeNote(r.getBytes(1)).fathers.single().quote) }
+                s.executeQuery("SELECT work, body FROM reading").use { r ->
+                    r.next()
+                    assertEquals("Толковая – Библия", r.getString(1))
+                    assertEquals("Текст – толкования", decodeText(r.getBytes(2)))
+                }
+            }
+        }
+    }
+}

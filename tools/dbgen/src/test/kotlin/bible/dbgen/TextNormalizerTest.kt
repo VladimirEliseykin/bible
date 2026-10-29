@@ -12,6 +12,10 @@ class TextNormalizerTest {
         assertEquals(a.take(3), c.take(3))
     }
 
+    @Test fun longDashBecomesShort() {
+        assertEquals("Блаженны – ибо их; Иисус – Сын", TextNormalizer.dashes("Блаженны — ибо их; Иисус — Сын"))
+    }
+
     @Test fun yoEqualsYe() {
         assertEquals(TextNormalizer.stems("её"), TextNormalizer.stems("ее"))
     }

@@ -57,7 +57,7 @@ fun writeDatabase(out: File, books: List<BookInfo>, verses: Map<Int, List<Parsed
             c.prepareStatement("INSERT INTO verse_fts(docid, stem) VALUES(?,?)").use { pf ->
                 for (b in books) for (v in verses[b.id].orEmpty()) {
                     val id = verseId(b.id, v.chapter, v.verse)
-                    pv.setInt(1, id); pv.setInt(2, b.id); pv.setInt(3, v.chapter); pv.setInt(4, v.verse); pv.setString(5, v.text)
+                    pv.setInt(1, id); pv.setInt(2, b.id); pv.setInt(3, v.chapter); pv.setInt(4, v.verse); pv.setString(5, TextNormalizer.dashes(v.text))
                     pv.addBatch()
                     pf.setInt(1, id); pf.setString(2, TextNormalizer.stems(v.text))
                     pf.addBatch()

@@ -234,7 +234,7 @@ private fun SectionCard(section: Section, onClick: () -> Unit) {
                 style = TextStyle(shadow = Shadow(Color.Black.copy(alpha = 0.3f), blurRadius = 8f)),
             )
             Text(
-                if (books.size == 1) booksLabel(1) else "${booksLabel(books.size)} · ${books.first().shortTitle} — ${books.last().shortTitle}",
+                if (books.size == 1) booksLabel(1) else "${booksLabel(books.size)} · ${books.first().shortTitle} – ${books.last().shortTitle}",
                 fontSize = 12.sp,
                 color = Color.White.copy(alpha = 0.92f),
                 maxLines = 1,
