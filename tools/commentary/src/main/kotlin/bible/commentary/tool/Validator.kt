@@ -7,6 +7,9 @@ import bible.commentary.model.VerseNote
 
 const val MAX_LEAD = 300
 
+/** Невидимые символы, которые попадают в текст при копировании и ломают поиск и переносы. */
+private val INVISIBLE = setOf('\u200B', '\u200C', '\u200D', '\u2060', '\uFEFF', '\u00AD')
+
 /** Ошибки в файлах глав. Пустой список — пакет можно собирать. */
 fun validate(files: List<ChapterFile>, verseIds: Set<Int>, bookIds: Map<String, Int>, sources: Set<String>): List<String> {
     val errors = mutableListOf<String>()
@@ -68,5 +71,6 @@ private class Check(val ids: Set<Int>, val sources: Set<String>, val errors: Mut
 
     fun dash(where: String, text: String) {
         if ('—' in text) errors += "$where: длинное тире «—», нужно короткое «–»"
+        if (text.any { it in INVISIBLE }) errors += "$where: невидимый символ в тексте (пробел нулевой ширины и т. п.)"
     }
 }

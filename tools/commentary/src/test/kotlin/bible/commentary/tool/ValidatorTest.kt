@@ -34,6 +34,7 @@ class ValidatorTest {
     @Test fun longDash() = assertTrue(check("1" to good.copy(lead = "Кратко — суть.")).single().contains("длинное тире"))
     @Test fun longDashInsideItem() = assertTrue(check("1" to good.copy(meaning = listOf(item.copy(text = "b — c")))).single().contains("длинное тире"))
     @Test fun longDashInsideLife() = assertTrue(check("1" to good.copy(life = listOf(item.copy(text = "b — c")))).single().contains("длинное тире"))
+    @Test fun invisibleCharacters() = assertTrue(check("1" to good.copy(meaning = listOf(item.copy(text = "муж\u200Bу")))).single().contains("невидимый"))
     @Test fun emptyLead() = assertTrue(check("1" to good.copy(lead = " ")).single().contains("пуст"))
     @Test fun emptyItem() = assertTrue(check("1" to good.copy(context = listOf(item.copy(title = "")))).single().contains("пуст"))
     @Test fun leadTooLong() = assertTrue(check("1" to good.copy(lead = "а".repeat(301))).single().contains("300"))
