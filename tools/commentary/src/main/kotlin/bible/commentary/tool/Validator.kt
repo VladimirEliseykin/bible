@@ -72,5 +72,7 @@ private class Check(val ids: Set<Int>, val sources: Set<String>, val errors: Mut
     fun dash(where: String, text: String) {
         if ('—' in text) errors += "$where: длинное тире «—», нужно короткое «–»"
         if (text.any { it in INVISIBLE }) errors += "$where: невидимый символ в тексте (пробел нулевой ширины и т. п.)"
+        Regex("\\p{L}+").findAll(text).map { it.value }.firstOrNull { w -> w.any { it in 'а'..'я' || it in 'А'..'Я' || it == 'ё' } && w.any { it in 'a'..'z' || it in 'A'..'Z' } }
+            ?.let { errors += "$where: слово «$it» смешивает кириллицу и латиницу" }
     }
 }
